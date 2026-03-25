@@ -1,0 +1,35 @@
+{
+  "project": "",
+  "description": "",
+  "phase": "0 — Not Started",
+  "last_updated": "",
+  "last_updated_by": "",
+  "current_task": {
+    "id": "",
+    "title": "",
+    "assigned_to": "",
+    "status": "not_started",
+    "priority": ""
+  },
+  "handoff": {
+    "from": "",
+    "to": "",
+    "model": "",
+    "prompt_file": ".agents/handoff.md",
+    "approved_by_user": false,
+    "created_at": ""
+  },
+  "context": {
+    "current_file_focus": "",
+    "recent_decisions": [],
+    "blocked_on": null
+  },
+  "security_status": {
+    "last_scan": "",
+    "open_findings": 0,
+    "cleared_for_push": false
+  },
+  "tasks": {},
+  "decisions": [],
+  "changelog": []
+}

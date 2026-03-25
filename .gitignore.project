@@ -1,0 +1,49 @@
+# =========================
+# Agent System Files
+# =========================
+# These are the AI agent orchestration files.
+# They should NOT be committed to the actual project repository.
+# The boilerplate template repo keeps them; cloned projects ignore them.
+
+# Agent state (changes every session, project-specific)
+.agents/state.json
+.agents/state.md
+.agents/handoff.md
+
+# Agent config files (boilerplate — not project code)
+.agents/
+.github/agents/
+.github/prompts/
+.github/skills/
+.github/copilot-instructions.md
+
+# =========================
+# Standard Ignores
+# =========================
+
+# Dependencies
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

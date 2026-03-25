@@ -1,0 +1,45 @@
+# =========================
+# TEMPLATE REPO .gitignore
+# =========================
+# This .gitignore is for the BOILERPLATE TEMPLATE itself.
+# It commits all agent files so the template is complete on GitHub.
+#
+# AFTER CLONING for a new project:
+#   1. Delete this .gitignore
+#   2. Rename .gitignore.project → .gitignore
+#   (The Manager does this automatically during /init-project)
+
+# =========================
+# Standard Ignores
+# =========================
+
+# Dependencies
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
