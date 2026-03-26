@@ -42,6 +42,7 @@ When delegating work to another agent:
    - **Validation Gates**: Tests/checks the agent must pass before declaring success — include `write tests → run tests → iterate until green` as a default gate
    - **Files to Read**: Specific files the agent should start with
    - **Constraints**: What NOT to do, boundaries, non-goals
+   - **Vibe Mode** (optional): If this is rapid iteration, add `vibe_mode: true` — Agent will suppress intermediate explanations and only report final result (saves ~20% context)
 2. Update `.agents/state.json` with the handoff details (set `approved_by_user: false`)
 3. Tell the user clearly with a prominent banner:
 

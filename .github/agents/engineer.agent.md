@@ -51,6 +51,17 @@ Follow this sequence for every task:
 9. **Workspace update**: Update `.agents/workspace-map.md` if you created new files
 10. **Report**: Update `.agents/state.json` and `.agents/state.md`
 
+### 2.1 Vibe Mode (Compact Reporting)
+**If the handoff includes `vibe_mode: true`**, suppress all intermediate explanations. Only report:
+
+```
+✅ COMPLETE | Commit: [hash]
+Files changed: [count]
+Tests: [count] passed
+```
+
+Otherwise, provide full step-by-step explanation. This dramatically reduces context usage for rapid iteration.
+
 ### 3. Engineering Quality Checklist (self-imposed)
 Before declaring any task complete, verify:
 - [ ] Code compiles/runs without errors

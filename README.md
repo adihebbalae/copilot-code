@@ -57,6 +57,24 @@ Instead of copying full prompts, agents write to `.agents/handoff.md` and you us
 - `/handoff-to-designer` — Sends current handoff to Designer
 - `/handoff-to-consultant` — Sends current handoff to Consultant
 
+### Vibe Mode (Compact Reporting)
+
+For rapid iteration projects, reduce context usage by ~20%:
+
+In the handoff, add:
+```
+vibe_mode: true
+```
+
+Engineer will suppress all intermediate explanations and only report final result:
+```
+✅ COMPLETE | Commit: [hash]
+Files changed: [count]
+Tests: [count] passed
+```
+
+Use when you just want the end result, not step-by-step narration of the work.
+
 ### State Files
 
 | File | Purpose | Updated By |
