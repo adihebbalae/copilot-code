@@ -43,7 +43,19 @@ When delegating work to another agent:
    - **Files to Read**: Specific files the agent should start with
    - **Constraints**: What NOT to do, boundaries, non-goals
    - **Vibe Mode** (optional): If this is rapid iteration, add `vibe_mode: true` — Agent will suppress intermediate explanations and only report final result (saves ~20% context)
-2. Update `.agents/state.json` with the handoff details (set `approved_by_user: false`)
+2. Update `.agents/state.json`:
+   - Set `handoff.from`, `handoff.to`, `handoff.model`, `approved_by_user: false`
+   - Add the task to `tasks` using this exact format:
+     ```json
+     "tasks": {
+       "TASK-001": {
+         "title": "Short task title here",
+         "assigned_to": "engineer",
+         "status": "pending",
+         "model": "sonnet"
+       }
+     }
+     ```
 3. Tell the user clearly with a prominent banner:
 
 ```
@@ -51,7 +63,7 @@ When delegating work to another agent:
 ║  🔀 SWITCH TO:  @[agent]   |   MODEL:  [Model]             ║
 ╚══════════════════════════════════════════════════════════════╝
 ```
-   Then: **"Run `/handoff-to-[agent] [TASK-ID]: [task title]` — the task name keeps parallel chats distinct."**
+   Then: **"Run `/handoff-to-[agent] TASK-001` — the agent will auto-load the task title and brief."**
 
 ### 4. State Management
 - Keep `.agents/state.json` as the single source of truth
