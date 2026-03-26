@@ -74,12 +74,39 @@ Instead of copying full prompts, agents write to `.agents/handoff.md` and you us
 | `security-audit` | OWASP Top 10 security audit checklist || `tdd` | TDD workflow enforcing RED → GREEN → REFACTOR |
 | `quality-gate` | Pre-push gate: lint + type-check + test + security scan |
 
-### Prompts
+## Supply Chain Security
+
+**Engineer cannot add arbitrary packages.** We use defense-in-depth to prevent malware/typosquats from reaching production:
+
+```
+Gate 1: Handoff         →  Manager approves dependencies before handoff
+        Constraint       →  Engineer forbidden from adding unapproved packages
+        
+Gate 2: Pre-Review      →  /review-dependencies vets packages (typosquats, abandoned, trust)
+        
+Gate 3: Quality Gate    →  Lint + Type + Test + Dependency Audit (direct + transitive)
+        
+Gate 4: Security Audit  →  @security agent reviews SBOM, maintainers, lock files
+        (Mandatory       →  Required before ANY push with dependency changes
+         on changes)
+```
+
+**Workflow**:
+1. **Task needs a package?** Manager calls `/review-dependencies` first — vets typosquats, maintainers, CVEs
+2. **Approved?** Added to handoff; Engineer implements with it locked
+3. **Engineer finishes?** Quality gate runs — catches HIGH/CRITICAL vulns
+4. **Dependencies changed?** Security agent MUST review before push — full SBOM generation
+5. **Passed all checks?** Safe to ship
+
+See [Security Agent](Security.agent.md) for full dependency review process.
+
+
 
 | Prompt | Purpose |
 |--------|----------|
 | `/init-project` | PRD intake and full project scaffolding |
 | `/digest-prd` | Digest large PRDs (500–2000+ lines) into brief + task backlog |
+| `/review-dependencies` | Pre-handoff dependency vetting (supply chain security) |
 | `/handoff-to-engineer` | Trigger handoff to Engineer agent |
 | `/handoff-to-security` | Trigger handoff to Security agent |
 | `/handoff-to-designer` | Trigger handoff to Designer agent |

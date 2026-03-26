@@ -42,9 +42,70 @@ Systematically check for:
 - [ ] Input validation on all user-facing endpoints
 - [ ] Rate limiting on authentication endpoints
 - [ ] Proper error messages (no stack traces in production)
-- [ ] Dependency audit (`npm audit`, `pip audit`, etc.)
+- [ ] **Dependency audit + supply chain verification** (see below)
 - [ ] File upload validation (if applicable)
 - [ ] HTTPS enforcement
+
+### 4. Mandatory: Dependency Review on Any package.json / requirements.txt / Gemfile Changes
+
+If the handoff involves ANY dependency updates, you MUST perform a full dependency audit BEFORE approving the push:
+
+**4A: Check for Dependency Changes**
+```bash
+git diff HEAD~1..HEAD package.json  # or requirements.txt, Gemfile, go.mod, etc.
+```
+If nothing changed → skip to 4D. If dependencies changed → proceed.
+
+**4B: Full Dependency Audit (Transitive + Direct)**
+```bash
+# Node.js: direct + transitive
+npm audit --json > audit-report.json
+npx npm-check-updates -u --target minor  # shows outdated deps
+npx snyk test --severity-threshold=high
+
+# Python: direct + transitive
+pip-audit --desc
+pip install safety && safety check --json
+
+# Go
+go list -json -m all | nancy sleuth
+```
+
+**4C: Typosquatting + Registry Verification**
+For EACH new or updated package, verify:
+1. Package name spellings match official registries (npm.js.org, pypi.org, rubygems.org)
+2. Publisher is known/trusted (check download stats, maintenance status, GitHub stars)
+3. No suspiciously recent creation date for established package name
+4. No unexpected maintainer changes (check GitHub commit history)
+
+Use these tools:
+- npm: `npm view <package> time` (check version timeline)
+- pip: `pip show <package>` + check PyPI homepage
+- Ruby: `gem info <package>` + check GitHub link
+
+**4D: SBOM (Software Bill of Materials) Generation**
+Generate a manifest of all dependencies:
+```bash
+# Node.js
+npm ls --depth=Infinity > SBOM.txt
+
+# Python
+pip freeze > SBOM.txt
+
+# Go
+go mod graph > SBOM.txt
+```
+
+**4E: Lock File Integrity**
+Verify package-lock.json / Pipfile.lock / go.sum was updated (if tool supports it):
+- [ ] Lock file is committed
+- [ ] Lock file versions match package manifest
+- [ ] No integrity hash mismatches
+
+**Verdict Rules**:
+- **FAIL if**: Any HIGH/CRITICAL vulnerability, typosquatting risk detected, unsigned package, or unexpected maintainer
+- **CONDITIONAL PASS if**: Medium vulnerabilities with user approval + documented risk
+- **PASS if**: All checks green + SBOM generated
 
 ## Report Format
 

@@ -146,6 +146,18 @@ grep -rn "api_key\s*=\s*['\"]" --include="*.ts" --include="*.js" --include="*.py
 grep -rn "secret\s*=\s*['\"]" --include="*.ts" --include="*.js" --include="*.py" .
 ```
 
+### 4B2: Dependency Supply Chain Audit (HIGH PRIORITY)
+**If package.json / requirements.txt / Gemfile / go.mod changed, invoke @security agent BEFORE pushing.**
+
+Do NOT assume the quality gate audit is sufficient. Security performs:
+- Typosquatting detection (name similarity to popular packages)
+- Maintainer verification (unexpected changes, abandoned packages)
+- Transitive dependency audit (indirect deps)
+- SBOM generation (artifacts for compliance/inventory)
+- Lock file integrity validation
+
+See Security agent documentation for full dependency review process.
+
 ### 4C: Quick OWASP Check (for changed files only)
 For each file modified in this push, verify:
 - [ ] User input is validated before use
@@ -157,9 +169,11 @@ For each file modified in this push, verify:
 For a full audit, invoke the `@security` agent separately.
 
 ### Pass Criteria
-- [ ] Zero HIGH or CRITICAL dependency vulnerabilities
+- [ ] Zero HIGH or CRITICAL dependency vulnerabilities (direct)
+- [ ] Transitive dependencies also checked (npm audit includes this)
 - [ ] No secrets found in source files
 - [ ] No obvious OWASP violations in changed files
+- [ ] If dependencies changed: SBOM generated + @security agent cleared before push
 
 ### On Failure
 - **Dependency vulnerability**: Update the package or document the exception with user approval. Do not push with unmitigated HIGH/CRITICAL CVEs.
@@ -204,6 +218,14 @@ If any stage fails, output:
 
 ## Integration with Security Agent
 
-The quality gate's Stage 4 is a quick surface scan, not a full audit. For high-risk changes (auth, payments, file uploads, new API surface), always invoke `@security` as a separate full-depth review AFTER the gate passes.
+The quality gate's Stage 4 is a quick surface scan, not a full audit.
 
-The gate catches the obvious. The Security agent catches the subtle.
+**Mandatory @security review for:**
+- Any dependency changes (stages 4A2 covers the full supply chain audit)
+- Auth, payments, file uploads
+- New API surface
+- Any HIGH/CRITICAL findings in 4A or 4B
+
+Always invoke `@security` after the gate if any of the above apply.
+
+The gate catches the obvious. The Security agent catches the subtle. **Supply chain attacks are sophisticated — never skip the Security agent review for dependency changes.**
