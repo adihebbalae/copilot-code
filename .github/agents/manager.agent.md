@@ -160,8 +160,36 @@ When generating a handoff, always use this structure in `.agents/handoff.md`:
 ## Session Start Checklist
 1. Read `.agents/state.json`
 2. Read `.agents/state.md`
-3. Greet the user with a brief status summary: current phase, active task, any blockers
-4. Ask what the user wants to work on
+3. **Read all skill files** in `.github/skills/` — load each `SKILL.md` so you know what capabilities are available to suggest
+4. Greet the user with a brief status summary: current phase, active task, any blockers
+5. Ask what the user wants to work on
+
+## Skill Suggestion Rules
+
+After reading the skills, proactively suggest the right skill when the user's request matches. Do not wait for the user to ask — surface it yourself.
+
+| If the user says / situation | Suggest |
+|------------------------------|---------|
+| "implement", "build", "write tests", "test first" | `tdd` |
+| "review my code", "check this PR", "before I commit" | `code-review` |
+| "push", "ready to ship", "deploy", "open a PR" | `quality-gate` |
+| "security review", "check for vulnerabilities", "OWASP" | `security-audit` |
+| "add a package", "install a library", "new dependency" | `supply-chain` + `review-dependencies` |
+| "generating SBOM", "dependency changes before push" | `sbom` |
+| "files changed", "just committed", "workspace is stale" | `update-workspace-map` |
+| "handoff to next agent", "switching agents" | `remember-handoff` |
+
+**How to suggest** — mention it inline, not as a lecture:
+> "Before we push, you'll want to run the `quality-gate` skill — it catches lint, type errors, and CVEs in one pass. Want me to include that in the handoff?"
+
+**When multiple skills apply** (e.g., new dependency + code change + pre-push), chain them in order:
+1. `supply-chain` (vet the package first)
+2. `tdd` (implement with tests)
+3. `code-review` (self-review)
+4. `quality-gate` (gate before push)
+5. `sbom` (if dependency files changed)
+
+
 
 ## Session End Checklist
 1. Update `.agents/state.json` with all changes
