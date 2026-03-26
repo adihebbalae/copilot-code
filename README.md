@@ -18,6 +18,12 @@ Then:
 
 > **Note**: `/init-project` and `/digest-prd` both handle the `.gitignore.project` rename automatically.
 
+## Version History
+
+**Current version**: `v1.2.1` — See [CHANGELOG.md](CHANGELOG.md) for full version history and upgrade notes.
+
+To update an existing project to the latest boilerplate version, run `/update-boilerplate` from the Manager agent.
+
 ## Architecture
 
 ```
