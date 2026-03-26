@@ -4,14 +4,19 @@ A multi-agent orchestration framework for GitHub Copilot using Claude models —
 
 ## Quick Start
 
-1. **Use this template** on GitHub (or clone it)
-2. **Rename `.gitignore.project` → `.gitignore`** (this strips agent files from your project's git history)
-3. Open in VS Code with GitHub Copilot + Claude models enabled
-4. Select the **Manager** agent in the Copilot chat panel
-5. Use the `/init-project` prompt and paste your PRD
-6. The Manager will interrogate you, scaffold the project, and begin coordinating work
+```powershell
+# One command: creates a new GitHub repo from this template AND clones it
+gh repo create my-project-name --template adihebbalae/copilot-code --public --clone
+cd my-project-name
+```
 
-> **Note**: The Manager's `/init-project` does the gitignore rename automatically if you forget.
+Then:
+1. Open the folder in VS Code with GitHub Copilot + Claude models enabled
+2. Select the **Manager** agent in the Copilot chat panel
+3. For a standard PRD: use `/init-project` and paste your PRD
+4. For a large PRD (500+ lines): use `/digest-prd` instead — compresses it into a task backlog first
+
+> **Note**: `/init-project` and `/digest-prd` both handle the `.gitignore.project` rename automatically.
 
 ## Architecture
 
