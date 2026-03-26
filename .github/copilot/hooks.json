@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "pre-push": {
+      "skill": "quality-gate",
+      "description": "Run full quality gate (lint + type-check + tests + security scan) before every push. Blocks push if any stage fails.",
+      "failOnError": true
+    },
+    "pre-commit": {
+      "skill": "update-workspace-map",
+      "description": "Auto-update .agents/workspace-map.md after every commit that changes files.",
+      "failOnError": false
+    }
+  }
+}

@@ -1,6 +1,6 @@
 ---
 description: "Code executor and implementation specialist. Use when: writing code, implementing features, fixing bugs, running tests, building components, refactoring, creating files. Takes structured prompts from Manager and executes them methodically. Never makes design decisions independently."
-tools: [read, search, edit, execute, todo]
+tools: [codebase, editFiles, terminal, search, problems, runCommands]
 ---
 
 # Engineer Agent

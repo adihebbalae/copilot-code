@@ -87,10 +87,14 @@ Use when you just want the end result, not step-by-step narration of the work.
 ### Skills
 
 | Skill | Purpose |
-|-------|---------|
+|-------|----------|
 | `code-review` | On-demand code review checklist |
-| `security-audit` | OWASP Top 10 security audit checklist || `tdd` | TDD workflow enforcing RED → GREEN → REFACTOR |
+| `security-audit` | OWASP Top 10 security audit checklist |
+| `tdd` | TDD workflow enforcing RED → GREEN → REFACTOR |
 | `quality-gate` | Pre-push gate: lint + type-check + test + security scan |
+| `update-workspace-map` | Auto-regenerate `.agents/workspace-map.md` post-commit |
+| `supply-chain` | Standalone 4-gate supply chain security (submittable to [awesome-copilot](https://github.com/github/awesome-copilot)) |
+| `sbom` | Native SBOM generation via syft/cdxgen + CVE scan via osv-scanner |
 
 ## Supply Chain Security
 
@@ -122,15 +126,16 @@ See [Security Agent](Security.agent.md) for full dependency review process.
 
 | Prompt | Purpose |
 |--------|----------|
-| `/init-project` | PRD intake and full project scaffolding |
+| `/init-project` | PRD intake, full scaffolding, GitHub Issues backlog, Context7 MCP config |
 | `/digest-prd` | Digest large PRDs (500–2000+ lines) into brief + task backlog |
 | `/review-dependencies` | Pre-handoff dependency vetting (supply chain security) |
-| `/retrofit` | Retrofit existing projects with agent system; auto-generate plan |
+| `/remember-handoff` | Write handoff to Copilot Memory — next agent reads it automatically |
+| `/retrofit` | Retrofit existing projects (VS Code, JetBrains, Eclipse, Xcode) |
 | `/handoff-to-engineer` | Trigger handoff to Engineer agent |
 | `/handoff-to-security` | Trigger handoff to Security agent |
 | `/handoff-to-designer` | Trigger handoff to Designer agent |
 | `/handoff-to-consultant` | Trigger handoff to Consultant agent |
-| `/learn` | Extract session patterns into `copilot-instructions.md` |
+| `/learn` | Extract session patterns into `copilot-instructions.md` + Copilot Memory |
 
 ## Package Age Policy
 
@@ -147,7 +152,7 @@ Already have a project? Use `/retrofit` to add agents **without disrupting exist
 @manager: /retrofit
 ```
 
-Manager audits your project, generates a customized retrofit plan. Follow steps, commit to a feature branch, then use agents for your next feature.
+Manager detects your IDE (VS Code, JetBrains, Eclipse, Xcode), audits your project, and generates a customized retrofit plan. The `.agent.md` format is cross-IDE — one boilerplate works everywhere.
 
 See [RETROFIT.md](RETROFIT.md) for full migration guide.
 
@@ -166,6 +171,8 @@ The Manager will add project-specific MCPs, skills, and instructions based on yo
 
 ## Requirements
 
-- VS Code with GitHub Copilot (Pro Individual or higher)
+- VS Code (or JetBrains / Eclipse / Xcode) with GitHub Copilot
 - Claude models enabled (Haiku, Sonnet, Opus)
-- Context7 MCP configured (recommended for library docs)
+- Context7 MCP — auto-configured by `/init-project` based on your stack
+- GitHub CLI (`gh`) — required for GitHub Issues task backlog
+- `syft` or `cdxgen` — required for SBOM generation (installed automatically by `sbom` skill if missing)

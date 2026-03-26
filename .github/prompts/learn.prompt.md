@@ -46,16 +46,49 @@ Edit `.github/copilot-instructions.md`:
 - Write each entry as a concise, imperative rule: "Always do X because Y"
 - If amending existing content, preserve the surrounding text
 
-## Step 6: Report to User
+## Step 6: Persist to Copilot Memory (Cross-Session)
+
+After writing to `copilot-instructions.md`, also save key patterns to Copilot's persistent Memory so ALL agents benefit in future sessions — not just agents that load the instructions file.
+
+For each pattern added in Step 5, write a memory entry:
+
+**Memory key format**: `pattern:[project-name]:[category]:[slug]`
+
+**Example entries:**
+- Key: `pattern:myapp:gotcha:auth-token-location`
+- Value: `Always read auth tokens from context.user.token — NOT from session storage. Session storage is cleared on tab close.`
+
+**Why Memory AND instructions?**
+- `copilot-instructions.md` is loaded at session start but has a token budget limit
+- Memory is retrieved on-demand, unlimited, cross-agent, and persists across project sessions
+- Patterns in Memory are available even if an agent starts without loading the instructions file first
+
+**Write to memory for every pattern in category:**
+- `gotchas` — always persist (these cause the most bugs)
+- `conventions` — persist if they're non-obvious (e.g., unusual naming patterns)
+- `tooling` — persist if the commands are unusual or project-specific
+- `agent-behavior` — persist if they correct consistent agent errors
+
+**Skip memory for:**
+- Generic best practices (agents already know)
+- One-time contextual decisions that won't recur
+
+---
+
+## Step 7: Report to User
 
 Summarize what was learned:
 
 ```
 ## /learn Summary
 
-### Added
+### Added to copilot-instructions.md
 - [category]: [rule]
 - [category]: [rule]
+
+### Persisted to Copilot Memory
+- [key]: [short description]
+- [key]: [short description]
 
 ### Amended
 - [existing rule] → [updated rule] (reason: [why it changed])
@@ -65,3 +98,4 @@ Summarize what was learned:
 ```
 
 Explain the WHY for each addition — why this rule will help future agents.
+

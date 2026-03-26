@@ -14,21 +14,27 @@
     security.agent.md            # Adversarial security auditor
     designer.agent.md            # UI/UX design consultant
     consultant.agent.md          # Deep reasoning specialist (Opus)
+  copilot/
+    hooks.json                       # Copilot lifecycle hooks (pre-push → quality-gate, pre-commit → workspace-map)
   prompts/
     handoff-to-engineer.prompt.md   # Quick handoff template → Engineer
     handoff-to-security.prompt.md   # Quick handoff template → Security
     handoff-to-designer.prompt.md   # Quick handoff template → Designer
     handoff-to-consultant.prompt.md # Quick handoff template → Consultant
-    init-project.prompt.md          # PRD intake and project scaffolding
+    init-project.prompt.md          # PRD intake, project scaffolding, GitHub Issues backlog, Context7 MCP
     digest-prd.prompt.md            # Digest large PRDs (500-2000+ lines) into brief + task backlog
     review-dependencies.prompt.md   # Pre-handoff dependency vetting for supply chain security
-    retrofit.prompt.md              # Retrofit existing projects; auto-generate customized plan
-    learn.prompt.md                 # Extract session patterns → copilot-instructions.md
+    retrofit.prompt.md              # Retrofit existing projects; IDE-specific (VS Code, JetBrains, Eclipse, Xcode)
+    learn.prompt.md                 # Extract session patterns → copilot-instructions.md + Copilot Memory
+    remember-handoff.prompt.md      # Write handoff to Copilot Memory — eliminates copy-paste between agents
   skills/
-    code-review/SKILL.md         # On-demand code review checklist
-    security-audit/SKILL.md      # On-demand security audit checklist
-    tdd/SKILL.md                 # TDD workflow — RED → GREEN → REFACTOR
-    quality-gate/SKILL.md        # Pre-push gate: lint + type-check + test + security scan
+    code-review/SKILL.md              # On-demand code review checklist
+    security-audit/SKILL.md           # On-demand security audit checklist
+    tdd/SKILL.md                      # TDD workflow — RED → GREEN → REFACTOR
+    quality-gate/SKILL.md             # Pre-push gate: lint + type-check + test + security scan
+    update-workspace-map/SKILL.md     # Auto-regenerate workspace-map.md post-commit
+    supply-chain/SKILL.md             # Standalone 4-gate supply chain security (submittable to awesome-copilot)
+    sbom/SKILL.md                     # Native SBOM generation via syft/cdxgen + CVE scan via osv-scanner
 
 .agents/
   state.json                     # Machine-readable project state (source of truth)

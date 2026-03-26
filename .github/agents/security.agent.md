@@ -1,6 +1,6 @@
 ---
 description: "Adversarial security auditor and white-hat penetration tester. Use when: reviewing code for vulnerabilities, pre-push security scan, auditing authentication/authorization, checking for injection attacks, validating input sanitization, reviewing dependency security. Works in isolation to prevent bias transfer."
-tools: [read, search, execute]
+tools: [codebase, search, terminal, problems]
 ---
 
 # Security Agent

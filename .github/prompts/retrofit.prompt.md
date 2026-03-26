@@ -7,6 +7,23 @@ You are running `/retrofit`. Your job is to evaluate an existing project and gen
 
 ---
 
+## Phase 0: Detect IDE
+
+Before auditing, identify which IDE the user is running. Ask:
+
+```
+Which IDE are you using?
+  A) VS Code (GitHub Copilot extension)
+  B) JetBrains (IntelliJ, PyCharm, WebStorm, etc.)
+  C) Eclipse
+  D) Xcode
+  E) Other / CLI only
+```
+
+Use this to adjust all setup instructions in Phase 3. The `.agent.md` format is cross-IDE — the audit is the same regardless of IDE.
+
+---
+
 ## Phase 1: Audit the Existing Project
 
 Read the workspace. Answer these questions:
@@ -269,3 +286,107 @@ When user confirms:
 1. Show them the exact commands to run (Step 1–5)
 2. Remind them to commit to a feature branch first
 3. Offer to help troubleshoot once they've run the commands
+
+---
+
+## Phase 6: IDE-Specific Setup
+
+Use the IDE detected in Phase 0. Skip sections that don't apply.
+
+---
+
+### Option A: VS Code (default path)
+
+Agents work natively. No extra setup beyond Phase 3–5.
+
+**Verify agent is loaded:**
+1. Open Copilot Chat panel (`Ctrl+Shift+I`)
+2. Click the agent switcher dropdown
+3. Confirm `@manager`, `@engineer`, etc. appear in the list
+
+**If agents don't appear:**
+- Check `.github/agents/*.agent.md` files exist
+- Reload VS Code window (`Ctrl+Shift+P` → "Developer: Reload Window")
+- Ensure GitHub Copilot extension is v1.200+ (`Extensions` → `GitHub Copilot`)
+
+---
+
+### Option B: JetBrains (IntelliJ / PyCharm / WebStorm / etc.)
+
+**Same `.agent.md` format** — JetBrains Copilot plugin reads `.github/agents/` natively.
+
+**Setup:**
+1. Ensure JetBrains Copilot plugin is v2.0+:
+   - `Settings → Plugins → GitHub Copilot → check for updates`
+2. Run the clone/copy steps from Phase 3 normally
+3. Open the Copilot Chat panel (AI Assistant tool window)
+4. Agents appear in the `@` mention dropdown automatically
+
+**JetBrains-specific notes:**
+- Terminal commands (Phase 1C) use the built-in Terminal tab or JetBrains run configs
+- `.agents/state.json` is readable but you'll edit it via the IDE's JSON editor (with schema hints)
+- If you have an existing `.idea/` AI config, the Copilot plugin coexists — no conflict
+- Quality gate commands run via Run Configurations or the Terminal tool window
+
+---
+
+### Option C: Eclipse
+
+**Copilot Eclipse plugin supports `.agent.md` from v3.x+.**
+
+**Setup:**
+1. Verify plugin version: `Help → About Eclipse → Installation Details → "GitHub Copilot for Eclipse"`
+   - Requires 3.x or later for agent file support
+2. Copy boilerplate files normally (Phase 3 steps)
+3. Refresh the project in Eclipse: `F5` on project root → agents are detected on next Copilot open
+4. Access agents: Copilot view → Agent dropdown → select `@manager`
+
+**Eclipse-specific notes:**
+- Eclipse uses workspace-scoped settings; `.github/agents/` is read per-project
+- Terminal commands (Phase 1C) run via Eclipse's built-in Terminal view (`Window → Show View → Terminal`)
+- Build commands from Phase 1C: map to Eclipse Run/Build configurations or use Terminal view
+- If using Maven/Gradle: quality gate commands can be triggered via Run Configurations
+
+---
+
+### Option D: Xcode
+
+**Copilot for Xcode supports `.agent.md` from Copilot Xcode extension v2.0+.**
+
+**Setup:**
+1. Ensure Copilot Xcode extension is v2.0+:
+   - `Xcode → Settings → Extensions → GitHub Copilot → check version`
+2. The boilerplate `.github/agents/` files live at repo root (same as any other project)
+3. Open Copilot Chat in Xcode: right-click editor → `GitHub Copilot → Open Chat`
+4. Agents appear in the `@mention` list
+
+**Xcode-specific notes:**
+- Phase 1C commands run in Terminal.app (external) or Xcode's built-in terminal if available
+- Stack detection for Swift/SwiftUI: `Package.swift` = Swift Package Manager project
+- Stack detection for Objective-C: `Podfile` = CocoaPods project
+- Build command: `xcodebuild -project [name].xcodeproj -scheme [scheme] build`
+- Test command: `xcodebuild test -project [name].xcodeproj -scheme [scheme]`
+- Quality gate: run manually in Terminal.app — Copilot Hooks aren't yet supported natively on Xcode
+
+**Xcode `.gitignore` additions** — add to merged `.gitignore`:
+```
+# Xcode
+*.xcworkspace/xcuserdata/
+DerivedData/
+*.xccheckout
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+```
+
+---
+
+### Option E: CLI / Headless
+
+Running agents without a GUI IDE (e.g., CI automation, SSH session):
+
+- Agents are just markdown prompts — invoke via any Copilot API client or the GitHub Copilot CLI (`gh copilot`)
+- State management still works: `.agents/state.json` is plain JSON
+- Quality gate: run directly in the shell (lint, type-check, test commands)
+- Handoff: use `/remember-handoff` to write state to memory, then invoke the next agent with the memory key
+

@@ -1,6 +1,6 @@
 ---
 description: "Deep reasoning specialist for complex architectural decisions, ambiguous problems, and high-stakes strategy. Use when: making irreversible architectural choices, resolving conflicting requirements, evaluating tradeoffs with no clear winner, designing system-level patterns, debugging fundamental design flaws. Use sparingly — this agent uses Opus and is expensive."
-tools: [read, search, web]
+tools: [codebase, search, browser]
 ---
 
 # Consultant Agent
