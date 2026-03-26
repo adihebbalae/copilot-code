@@ -71,7 +71,29 @@ pip install safety && safety check --json
 go list -json -m all | nancy sleuth
 ```
 
-**4C: Typosquatting + Registry Verification**
+**4C: Package Age Verification (30-Day Minimum)**
+
+For EACH dependency, verify publish date:
+```bash
+# Node.js
+npm view <package>@<version> time
+
+# Python
+pip index versions <package>  # Check published date
+
+# Go
+go list -m -u <package>/...  # Shows version info
+```
+
+REJECT if version published < 30 days ago, UNLESS:
+- It's a security patch (Z-version bump only)
+- Original version is >30 days old
+- Patch has zero breaking changes
+- All tests pass
+
+**Verdict**: FAIL on age violation (except documented security patches)
+
+**4D: Typosquatting + Registry Verification**
 For EACH new or updated package, verify:
 1. Package name spellings match official registries (npm.js.org, pypi.org, rubygems.org)
 2. Publisher is known/trusted (check download stats, maintenance status, GitHub stars)
@@ -103,9 +125,9 @@ Verify package-lock.json / Pipfile.lock / go.sum was updated (if tool supports i
 - [ ] No integrity hash mismatches
 
 **Verdict Rules**:
-- **FAIL if**: Any HIGH/CRITICAL vulnerability, typosquatting risk detected, unsigned package, or unexpected maintainer
+- **FAIL if**: Any HIGH/CRITICAL vulnerability, package < 30 days old, typosquatting risk detected, unsigned package, or unexpected maintainer
 - **CONDITIONAL PASS if**: Medium vulnerabilities with user approval + documented risk
-- **PASS if**: All checks green + SBOM generated
+- **PASS if**: All checks green + SBOM generated + all packages >30 days old
 
 ## Report Format
 

@@ -46,7 +46,38 @@ Look for:
 - [ ] Published date is reasonable (not yesterday for "express" equivalent)
 - [ ] Maintainer info is present
 
-### 1B: Typosquatting Detection
+### 1B: Package Age Verification (30-Day Rule)
+**REJECT any package version published < 30 days ago** (unless documented security patch). This allows time for:
+- Known vulnerabilities to surface and be patched
+- Typosquats to be detected and reported  
+- Community testing to reveal issues
+
+```bash
+# Node.js
+npm view package-name@version time
+# Look for the version publish date. Calculate: today - publish_date >= 30 days
+
+# Python
+pip index versions package-name  # shows all versions + dates
+# OR check PyPI directly: pypi.org/project/package-name
+
+# Ruby
+gem list -r package-name --all  # shows versions + dates
+```
+
+**Exception**: Security patches (X.Y.Z → X.Y.Z+1) with zero breaking changes may be used if:
+- Original version is >30 days old
+- Only Z version changed (patch version)
+- Patch fixes a known CVE
+- All tests pass with the new patch
+
+**Red flags**:
+- ❌ Published yesterday, version 1.0.0 of a new package
+- ❌ 0.0.x experimental version needed in production
+- ✅ lodash 4.17.22 published 3 years ago (established, proven)
+- ✅ lodash 4.17.21 (security patch of 4.17.20 from 3 years ago)
+
+### 1C: Typosquatting Detection
 Compare the package name against popular packages in the same category. Look for:
 - [ ] Similar but misspelled names (e.g., `expres`, `reactt`, `djnago`)
 - [ ] Extra characters (e.g., `express2`, `react-new`)
@@ -171,14 +202,14 @@ Include the risk doc in the handoff so Engineer knows.
 ### REJECT ❌
 Do NOT include in handoff. Explain to user:
 ```
-Package: malicious-pkg (hypothetical)
-Reason: **Supply chain risk detected**
-  - Package uploaded yesterday
-  - Maintainer account 3 days old
-  - Name: typosquatting of "mailchimp"
-  - Action: DO NOT USE
+Package: lodash
+Version: 4.17.100 (hypothetical)
+Reason: **Package age violation**
+  - Published 5 days ago (< 30-day minimum)
+  - Wait until [date] to use this version
+  - OR use established version: lodash 4.17.21 (3+ years old, proven stable)
 
-Alternative: Use [legitimate package] instead.
+Alternative: Use [legitimate version] instead.
 ```
 
 ---

@@ -107,11 +107,32 @@ See [Security Agent](Security.agent.md) for full dependency review process.
 | `/init-project` | PRD intake and full project scaffolding |
 | `/digest-prd` | Digest large PRDs (500–2000+ lines) into brief + task backlog |
 | `/review-dependencies` | Pre-handoff dependency vetting (supply chain security) |
+| `/retrofit` | Retrofit existing projects with agent system; auto-generate plan |
 | `/handoff-to-engineer` | Trigger handoff to Engineer agent |
 | `/handoff-to-security` | Trigger handoff to Security agent |
 | `/handoff-to-designer` | Trigger handoff to Designer agent |
 | `/handoff-to-consultant` | Trigger handoff to Consultant agent |
 | `/learn` | Extract session patterns into `copilot-instructions.md` |
+
+## Package Age Policy
+
+**All new dependencies must be ≥30 days old** to allow time for vulnerabilities to surface and be patched.
+
+- **Exception**: Security patches (Z-version bumps, e.g., 1.2.5 → 1.2.6) can be applied immediately if all tests pass
+- **Enforced by**: `/review-dependencies` (Manager), quality gate, and `@security` agent
+
+## Retrofitting Existing Projects
+
+Already have a project? Use `/retrofit` to add agents **without disrupting existing code**:
+
+```bash
+@manager: /retrofit
+```
+
+Manager audits your project, generates a customized retrofit plan. Follow steps, commit to a feature branch, then use agents for your next feature.
+
+See [RETROFIT.md](RETROFIT.md) for full migration guide.
+
 ## For New Projects
 
 This template uses a **two-gitignore strategy**:
