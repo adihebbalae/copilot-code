@@ -1,255 +1,415 @@
 ---
-description: "Initialize a new project from a PRD. Give the Manager your product requirements and it will scaffold the entire project pipeline."
+description: "Initialize a new project. Works with any input: point to a PRD file, paste one inline, or describe your idea and the Manager will build the PRD with you. One command for everything."
 agent: "manager"
-argument-hint: "Paste your PRD or describe what you want to build"
+argument-hint: "Path to PRD file (e.g. prd.md), or describe what you want to build"
 ---
 
-The user is starting a new project. Your job:
+You are running `/init-project` — the single entry point for starting any new project. You handle every input type: existing PRD file, inline PRD paste, or raw idea with no PRD yet.
 
-1. **Read the PRD below**
-2. **Identify research opportunities** — does this need competitive analysis, market sizing, tech validation, or free tool research?
-3. **Run research first** — invoke the researcher subagent to gather market intelligence before scaffolding
-4. **Show research findings** to the user
-5. **Ask Team Setup Questionnaire** (tools + budget)
-6. **Ask PRD clarifications** until zero ambiguity
-7. **Scaffold the project** incorporating research findings
+Work through the phases below in order. Do not skip phases. Do not scaffold until the user has approved the plan.
 
 ---
 
-## PRD / Description:
-$ARGUMENTS
+## Model Selection Strategy
+
+**Before starting**: Set your model allocation:
+- **Phase 1–3 (PRD intake, research)**: Use **Opus** or **Sonnet** — deep reading and research coordination requires full capacity
+- **Phase 4+ (clarifications, setup questions)**: Default to **Haiku** — sufficient for Q&A once the brief is built
+- **Task assignment** (Phase 7): Each task gets its optimal model (Engineer: Sonnet, Designer: Sonnet, Security: Opus, Consultant: Opus)
+
+Rationale: PRD ingestion and research coordination are the most expensive cognitive steps. Everything after compression is tactical.
 
 ---
 
-## Phase 1: PRD Intake & Research Scoping
+## Phase 0: Safety Check
 
-Read the PRD above. **Before asking the user anything**, assess:
-- **Is this a new market entry or product?** → research competitive landscape + user pain + market size
-- **Does it mention "free tier" or tools?** → research free + open-source options in the tech stack
-- **Does it reference competitors?** → research their features, pricing, positioning
-- **Is the tech stack unclear?** → research frameworks, databases, hosting options
-- **Are there ambitious claims** (10x faster, enterprise-grade)? → research what "best in class" actually does
-
-If **any of the above apply**, invoke Researcher immediately (see Phase 2). Otherwise, skip to Team Setup Questionnaire.
-
----
-
-## Phase 2: Invoke Researcher Subagent (if needed)
-
-If research is indicated, use the researcher subagent to investigate:
+Before anything else, check for an existing project:
 
 ```
-Use the researcher subagent to gather market intelligence for this project:
+If .agents/state.json exists AND status == "planning_complete" or "in_progress":
+  STOP. Show this message:
 
-PRD Summary: [2-3 sentence summary of what they're building]
+  ⚠️  This project is already initialized.
+
+  Current project: [project.name from state.json]
+  Status: [status]
+  Active task: [active_task]
+
+  Running /init-project again will OVERWRITE all existing planning work.
+
+  Options:
+  1. Continue with current project → close this chat, open @engineer and run /handoff-to-engineer
+  2. Start fresh (DESTRUCTIVE) → type "yes overwrite" to confirm
+
+  Wait for user response before proceeding.
+```
+
+---
+
+## Phase 1: PRD Detection & Intake
+
+Determine what the user provided. Check in this priority order:
+
+### 1A: File provided in `$ARGUMENTS`
+If `$ARGUMENTS` contains a file path (e.g., `prd.md`, `./docs/prd.md`):
+- Read the file fully with `read_file`. Do NOT skim.
+- Note: `$ARGUMENTS` = `$ARGUMENTS`
+
+### 1B: No arguments — scan root for PRD file
+If `$ARGUMENTS` is empty, scan the workspace root for:
+- `prd.md`, `PRD.md`, `prd.MD`
+- Any file matching: `*prd*.md`, `*spec*.md`, `*requirements*.md`, `*brief*.md`
+
+If exactly one match: confirm with user — "Found `[filename]` — using this as your PRD. Correct?"
+If multiple matches: list them and ask user to pick one.
+If no match: go to Phase 1C.
+
+### 1C: No PRD found — build one with the user
+If no PRD exists anywhere, run the Socratic PRD-building process inline:
+
+Tell the user:
+```
+No PRD found. Let's build one together — I'll ask questions until we have zero ambiguity.
+This usually takes 5–10 minutes and prevents weeks of wrong direction.
+
+Start here:
+1. What problem are you solving?
+2. Who has this problem? (be specific — not "developers" but "solo devs shipping SaaS")
+3. How do they solve it today?
+4. What are the 3–5 features that MUST exist for v1 to be useful?
+5. What are you explicitly NOT building in v1?
+```
+
+Wait for answers. Ask follow-up questions until you can answer all of these without guessing:
+- What does the product do, exactly?
+- Who uses it and what job does it do for them?
+- What's the tech stack and deployment model?
+- What ships in v1 vs later?
+- What are the hard constraints (compliance, budget, timeline)?
+
+Once you have full clarity, generate a PRD using the full format from the Project Brief template below, save it to `.dev/prd/original.md`, then continue to Phase 2.
+
+---
+
+## Phase 1.5: Stage the PRD File
+
+Immediately after reading or generating the PRD:
+
+1. Create `.dev/prd/` folder
+2. Copy/save the PRD to `.dev/prd/original.md`
+3. If the PRD was already at root (`prd.md` etc.), it stays where it is — just copy it. Do not delete the original.
+
+**Why**: Raw PRD stays in `.dev/` (gitignored). The compressed brief in `state.json` becomes the canonical reference for all agents. The raw file is never needed again after compression.
+
+---
+
+## Phase 2: Compress Into Project Brief
+
+Read the full PRD (from working memory or `.dev/prd/original.md`) and produce a **~50-line Project Brief**. This is the only thing agents will ever read. The raw PRD is dropped from context after this step.
+
+```
+## Project Brief
+
+**Product**: [one-sentence description]
+**User**: [specific persona, not generic category]
+**Problem**: [what it solves and why it matters]
+
+**Stack**: [languages, frameworks, databases, services]
+
+**Core Features** (must ship in v1):
+1. [feature] — [one-line description]
+2. ...
+
+**Non-Functional Requirements**:
+- [perf / scale / security / a11y targets]
+
+**Constraints**:
+- [hard constraints: no X, must use Y, deadline Z, compliance requirements]
+
+**Out of Scope** (v1):
+- [explicit exclusions]
+
+**Open Questions** (needs user input):
+1. [question]
+```
+
+Write this brief to `.agents/state.md` under `## Project Brief`. **After writing, drop the raw PRD from active context — work only from the brief going forward.**
+
+---
+
+## Phase 3: Research Scoping
+
+Assess the brief for research opportunities. **Before asking the user anything else**, evaluate:
+
+- **New market / product category?** → Research competitive landscape, user pain, market size
+- **"Free tier" or budget-conscious?** → Research free + open-source options in the stack
+- **Competitors mentioned?** → Research their features, pricing, positioning
+- **Tech stack unclear or debated?** → Research frameworks, databases, hosting options
+- **Ambitious performance/scale claims?** → Research what "best in class" actually does
+
+If **any apply**, invoke the Researcher subagent automatically (no user action needed):
+
+```
+Researcher task prompt:
+
+PRD Summary: [2-3 sentence summary from brief]
 
 Research scope:
-1. Competitive landscape: [list any competitors or similar products mentioned in PRD]
-2. Market sizing: [if PRD mentions a market segment, size it]
-3. User pain points: [from PRD, what problems are they solving?]
-4. Tech stack validation: [if PRD mentions specific tech, research if it's the right choice for this use case]
-5. Free-tier research: [if PRD mentions budget-consciousness or free tier, research free tools that support the stack]
+1. Competitive landscape: [competitors from brief, or closest analogues]
+2. Market sizing: [if a segment is mentioned]
+3. User pain validation: [what problems are users hiring this to solve?]
+4. Tech stack validation: [is the proposed stack the right choice for this scale/use case?]
+5. Free-tier options: [if budget-conscious — what's free, what are the limits?]
 
-Output format (required for v2.1.1):
-Generate .agents/research/[prd-slug].md with:
-- Executive Summary (3-5 bullets of key finding)
-- Competitive Analysis (if applicable)
-- Market Sizing (if applicable)
-- Tech Stack Validation (if applicable)
-- Free Tools & Services (if budget-conscious mentioned)
-- Key Gaps (data that's unavailable)
-- Recommendations (what to build/use based on findings)
+Output: Save to .agents/research/[prd-slug].md with:
+- Executive Summary (3-5 bullets)
+- Competitive Analysis
+- Tech Stack Recommendation
+- Free Tools (if applicable)
+- Key Gaps / Assumptions
+- Recommendations
 
-When done, return a brief summary. Manager will incorporate findings into the project plan.
+Return a brief summary to Manager when done.
 ```
 
-**Wait for Researcher to return** (it generates `.agents/research/[slug].md`). Then proceed to Phase 3.
+Wait for Researcher to return. Then show findings to user:
 
----
-
-## Phase 3: Show Research Findings to User
-
-**If research was run**, display findings:
-
-```markdown
-## 🔍 Research Complete
-
-I've researched your market, competitors, and tech landscape. Here's what I found:
-
-[Paste the Executive Summary from .agents/research/[slug].md]
-
-**Full research saved to**: `.agents/research/[slug].md` (you can read the full report anytime)
-
-**Questions this answers:**
-- [bullet of key question + answer from research]
-- [bullet of key question + answer from research]
-
-**Gaps we found:**
-- [data we couldn't find]
-- [assumption we're making]
-
-**Next steps:** I'll use these findings to recommend tech stack, deployment strategy, and feature prioritization. Let me ask a few setup questions first.
 ```
+## Research Complete
+
+[Executive Summary bullets from .agents/research/[slug].md]
+
+Full report: .agents/research/[slug].md
+
+Key answers:
+- [question from brief]: [answer from research]
+- [question from brief]: [answer from research]
+
+Gaps:
+- [data not available / assumptions made]
+```
+
+If no research is needed, skip directly to Phase 4.
 
 ---
 
 ## Phase 4: Team Setup Questionnaire
 
-**Now ask** (only after research is complete or skipped):
+Ask the user (one message, all questions at once):
 
-###############################################################################
-## ⚡ Team Setup Questionnaire
+```
+## Team Setup
 
-### Q1: What development environment are you using?
-- [ ] **GitHub Copilot + VS Code only** (no Claude Code CLI)
-- [ ] **GitHub Copilot + Claude Code CLI** (best for complex projects)
-- [ ] **Something else?** (describe)
+A few quick questions before I finalize the plan:
 
-### Q2: What's your project budget?
-- [ ] **Free tier only** — incorporate research findings for free deployment
-- [ ] **Paid services available** — use research for production-grade tools
-- [ ] **Budget TBD** — I'll show both options in the plan
+**Q1: Development environment?**
+- [ ] GitHub Copilot + VS Code only
+- [ ] GitHub Copilot + Claude Code CLI (recommended for complex projects)
+- [ ] Other (describe)
 
-###############################################################################
+**Q2: Project budget?**
+- [ ] Free tier only — I'll find free options for everything
+- [ ] Paid services available — use production-grade tooling
+- [ ] Undecided — show me both options
 
----
-
-## Phase 5: PRD Clarifications
-
-Ask clarifying questions until there is **ZERO ambiguity**:
-- Team size and experience level
-- Timeline and milestones
-- Tech stack preferences (or defer to research recommendations)
-- Deployment target (if not already in PRD)
-- Any hard constraints (compliance, infrastructure, regulatory)
-
----
-
-## Phase 6: Present Full Plan
-
-Before scaffolding, show the user:
-
-```markdown
-## 📋 Full Project Plan
-
-### Team Setup
-- Tools: [their answer from Q1]
-- Budget: [their answer from Q2]
-- Workflow: [Copilot-only / Copilot + CLI] [Free / Paid / Hybrid]
-
-### Research Findings  
-- Market: [key findings]
-- Competitors: [positioning]
-- Tech Recommendation: [from research, explained]
-
-### Project Structure
-- Modules: [5-10 line diagram]
-- Tech Stack: [framework, DB, deployment from research + user input]
-- Estimated Complexity: [simple / moderate / complex]
-
-### Initial Tasks
-- [TASK-001] ...
-- [TASK-002] ...
-...
-
-### Questions?
-Any changes before I proceed?
+**Q3: Team size and timeline?**
+- Solo or team?
+- When does v1 need to ship?
 ```
 
----
-
-## Phase 7: Scaffold the Project
-
-Once user approves:
-1. Delete `.gitignore` (template version)
-2. Rename `.gitignore.project` → `.gitignore` (project version)
-3. Fill out `.agents/state.json`:
-   - Project name, description
-   - `context.tools` + `context.budget` (from user answers)
-   - Tech stack (from research + user input)
-   - Module breakdown (if 3+ modules)
-   - Initial task list
-4. Update `.agents/state.md` with project overview
-5. Update `.agents/workspace-map.md` with planned structure
-6. Update `.github/copilot-instructions.md` with project-specific standards
-7. Create initial GitHub Issues for all tasks
-8. **Link research findings** to `.agents/state.json` context so future decisions reference them
+Wait for answers before proceeding.
 
 ---
 
-## Research Node Attribution
+## Phase 5: Clarify Until Zero Ambiguity
 
-At the top of `.agents/state.json`, reference the research:
+Using the brief + research findings + team setup answers, ask clarifying questions until there is **ZERO ambiguity**. One message, numbered list.
+
+Must be resolved before scaffolding:
+- **Exactly what the product does** (test: could you hand this brief to an engineer with no questions?)
+- **Who uses it and why** (specific persona, not a category)
+- **Tech stack confirmed** (research recommendation accepted or overridden with reason)
+- **Deployment target** (where does it run?)
+- **v1 scope locked** (what ships, what doesn't, hard deadline if any)
+- **Any compliance / regulatory constraints** (GDPR, HIPAA, SOC 2, etc.)
+
+If an answer is vague, probe deeper. If the brief contradicts itself, resolve it. If a feature has two interpretations, pick one.
+
+Wait for answers. Update the brief in `.agents/state.md` with the resolved answers before proceeding.
+
+---
+
+## Phase 6: Architecture Decisions (if needed)
+
+If the brief implies meaningful architecture choices NOT locked in by constraints (monolith vs. microservice, REST vs. GraphQL, ORM choice, auth strategy, realtime vs. polling, etc.):
+
+Present 2–3 options with tradeoffs. Recommend one with explicit WHY. Ask user to confirm.
+
+```
+### Architecture Decision: [topic]
+
+**Option A**: [name] — [1-line description]
+- Pro: [key advantage]
+- Con: [key tradeoff]
+
+**Option B**: [name] — [1-line description]
+- Pro: ...
+- Con: ...
+
+**Recommendation**: Option [X] because [specific reason tied to their project constraints].
+
+Confirm? Or choose differently?
+```
+
+Update `state.json` with confirmed decisions under `project.architecture_decisions`.
+
+---
+
+## Phase 7: Break Down Into Tasks
+
+Decompose confirmed features into an ordered task backlog. Each task:
+- Scoped to a single agent session (max 2–4 hours of work)
+- Assigned to one agent (Engineer / Security / Designer / Consultant)
+- Sequenced correctly (respect dependencies)
+- Sized correctly (not too big — if a task feels like 2 sessions, split it)
 
 ```json
 {
-  "project": "...",
-  "research_source": ".agents/research/[slug].md",
-  "research_findings_incorporated": [
-    "Tech stack recommendation from competitive analysis",
-    "Free deployment options from budget research",
-    "Market sizing confirms [N] TAM"
-  ]
+  "id": "TASK-001",
+  "title": "Short action title",
+  "agent": "engineer",
+  "model": "claude-sonnet",
+  "depends_on": [],
+  "description": "What to build",
+  "acceptance_criteria": ["criterion 1", "criterion 2"],
+  "why": "Why this comes first / why this approach"
 }
 ```
 
-This ensures future sessions know that decisions are grounded in evidence, not hunches.
+Aim for 8–20 tasks. Group smaller tasks if needed. If 3+ distinct functional areas exist, generate `.agents/MODULES.md` (see Phase 8C).
 
 ---
 
-## Phase 7 Sub-Steps: GitHub Issues, MCP Config & Budget Research
+## Phase 8: Full Plan Review
 
-### 7A: Create GitHub Issues as Task Backlog
+Before scaffolding anything, present the complete plan and ask for approval:
 
-After filling out state.json, create a GitHub Issue for each task using the GitHub CLI (`gh`):
+```
+## Project Plan — Ready for Review
 
+✅ Zero Ambiguity Confirmed
+- All questions resolved, no hidden assumptions remain
+
+### Summary
+- Product: [one sentence]
+- Stack: [confirmed stack]
+- Deployment: [target]
+- Team: [solo/team, tools, budget]
+
+### Research Findings
+- [key finding 1]
+- [key finding 2]
+(Full report: .agents/research/[slug].md)
+
+### Architecture Decisions
+- [decision]: [choice and why]
+
+### Task Backlog ([N] tasks)
+| ID | Title | Agent | Depends On |
+|----|-------|-------|------------|
+| TASK-001 | ... | engineer | — |
+| TASK-002 | ... | engineer | TASK-001 |
+...
+
+### First 3 tasks:
+1. TASK-001: [description]
+2. TASK-002: [description]
+3. TASK-003: [description]
+
+---
+Approve this plan? Or adjust before I scaffold?
+```
+
+**Do NOT begin scaffolding until user says yes.**
+
+---
+
+## Phase 9: Scaffold the Project
+
+Once user approves:
+
+### 9A: Clean Up Boilerplate Files
+1. Delete `.gitignore` (template version)
+2. Rename `.gitignore.project` → `.gitignore` (project version — strips agent files from git history)
+3. Ensure `.dev/` and `_dev/` are in `.gitignore`:
+   ```
+   # Development / temporary planning files
+   .dev/
+   _dev/
+   ```
+
+### 9B: Write `.agents/state.json`
+```json
+{
+  "project": {
+    "name": "[project name]",
+    "description": "[one-sentence description]",
+    "tech_stack": ["..."],
+    "architecture_decisions": {},
+    "external_dependencies": []
+  },
+  "research_source": ".agents/research/[slug].md",
+  "research_findings_incorporated": ["..."],
+  "context": {
+    "tools": {
+      "copilot": true,
+      "claude_code_cli": [true/false]
+    },
+    "budget": "[free/paid/tbd]"
+  },
+  "project_brief": "[compressed brief from Phase 2]",
+  "tasks": [...],
+  "active_task": "TASK-001",
+  "status": "planning_complete",
+  "handoff": {
+    "approved_by_user": false,
+    "target_agent": null
+  },
+  "changelog": ["init-project: project scaffolded [date]"],
+  "last_updated": "[date]",
+  "last_updated_by": "manager"
+}
+```
+
+### 9C: Update `.agents/state.md`
+Human-readable project overview. Include: project name, brief, confirmed stack, task count, first task.
+
+### 9D: Update `.agents/workspace-map.md`
+Add planned directory structure (prefix with `[planned]` for not-yet-created paths).
+
+### 9E: Update `.github/copilot-instructions.md`
+Add project-specific standards: stack, naming conventions, test framework, linting rules.
+
+### 9F: Create GitHub Issues (one per task)
 ```bash
-# Create one issue per task
 gh issue create \
   --title "[TASK-001] [Task title]" \
-  --body "$(cat <<'EOF'
-## Task
-[Task description from plan]
-
-## Acceptance Criteria
-- [ ] [criterion 1]
-- [ ] [criterion 2]
-
-## Constraints
-- Do NOT [constraint]
-
-## Assigned Agent
-@engineer | Model: Sonnet
-EOF
-)" \
+  --body "..." \
   --label "agent,task" \
   --assignee "@me"
 ```
 
-**Issue labels to create first** (if they don't exist):
+Create labels first if needed:
 ```bash
 gh label create "agent" --description "AI agent task" --color "0075ca"
-gh label create "task" --description "Planned task from /init-project" --color "e4e669"
+gh label create "task" --description "Planned task" --color "e4e669"
 gh label create "blocked" --description "Agent is blocked" --color "d93f0b"
 ```
 
-**Naming convention**: `[TASK-NNN] [verb] [object]` — e.g., `[TASK-001] Build authentication flow`
+Report all created issue URLs to user.
 
-After creating all issues, report:
-```
-## Issues Created
-- #[n] [TASK-001] [title] — https://github.com/[owner]/[repo]/issues/[n]
-- #[n] [TASK-002] [title] — ...
-
-Tasks are now in your GitHub backlog. Assign to @copilot in the GitHub UI to run autonomously in the cloud, or use the standard handoff workflow for in-session work.
-```
-
-### 7B: Auto-Generate MCP Config
-
-Detect the tech stack from the PRD and research findings, then generate the appropriate Context7 MCP config for library documentation.
-
-Create or update `.vscode/mcp.json`:
-
+### 9G: Auto-Generate MCP Config
+Detect tech stack from brief, generate `.vscode/mcp.json` with Context7 for library docs:
 ```json
 {
   "servers": {
@@ -262,225 +422,60 @@ Create or update `.vscode/mcp.json`:
 }
 ```
 
-### 7C: Web Search MCP (for Researcher Agent)
+Ask: **"Do you want web search for the Researcher agent? Options: (1) Tavily, (2) Brave Search, (3) Perplexity, (4) Skip"**
 
-Ask the user: **"Do you want to enable web search for the Researcher agent? This gives it powerful internet search beyond just visiting known URLs. Options: (1) Tavily, (2) Brave Search, (3) Perplexity, (4) Skip for now"**
+Add chosen server to `.vscode/mcp.json`.
 
-If the user chooses an option, add the corresponding server to `.vscode/mcp.json`:
+### 9H: MODULES.md (complex projects only)
+If 3+ distinct functional areas: generate `.agents/MODULES.md` with module registry, statuses, dependencies, and build order. Tell user to run `/list-modules` or `/show-graph`.
 
-**Tavily:**
-```json
-{
-  "servers": {
-    "tavily": {
-      "command": "npx",
-      "args": ["-y", "tavily-mcp@latest"],
-      "type": "stdio",
-      "env": {
-        "TAVILY_API_KEY": "${input:tavily-api-key}"
-      }
-    }
-  },
-  "inputs": [
-    {
-      "id": "tavily-api-key",
-      "type": "promptString",
-      "description": "Tavily API key (https://tavily.com)",
-      "password": true
-    }
-  ]
-}
-```
+### 9I: Budget Research Task (free tier only)
+If budget = free, create TASK-000 GitHub issue to research free deployment options before TASK-001.
 
-**Brave Search:**
-```json
-{
-  "servers": {
-    "brave-search": {
-      "command": "npx",
-      "args": ["-y", "@anthropic/brave-search-mcp@latest"],
-      "type": "stdio",
-      "env": {
-        "BRAVE_API_KEY": "${input:brave-api-key}"
-      }
-    }
-  },
-  "inputs": [
-    {
-      "id": "brave-api-key",
-      "type": "promptString",
-      "description": "Brave Search API key (https://brave.com/search/api/)",
-      "password": true
-    }
-  ]
-}
-```
+---
 
-**Perplexity:**
-```json
-{
-  "servers": {
-    "perplexity": {
-      "command": "npx",
-      "args": ["-y", "perplexity-mcp@latest"],
-      "type": "stdio",
-      "env": {
-        "PERPLEXITY_API_KEY": "${input:perplexity-api-key}"
-      }
-    }
-  },
-  "inputs": [
-    {
-      "id": "perplexity-api-key",
-      "type": "promptString",
-      "description": "Perplexity API key (https://perplexity.ai)",
-      "password": true
-    }
-  ]
-}
-```
-
-**If the user answered "Free tier only"**, add an initial task to the GitHub Issues backlog:
-```bash
-gh issue create \
-  --title "[TASK-000] Research free deployment options" \
-  --body "$(cat <<'EOF'
-## Task
-Research and document free tier options for deployment, database, and infrastructure:
-- Deployment: Vercel free, Railway free tier, Heroku free tier (if available)
-- Database: PlanetScale free tier, Supabase free tier, MongoDB Atlas free tier
-- Storage: Cloudflare R2 (10GB free), AWS S3 (1 year free tier), Backblaze B2
-- CI/CD: GitHub Actions (free with repo), GitLab CI (free), Render (free tier)
-- Monitoring: Sentry free tier, Datadog free tier if applicable
-
-Document findings in `.agents/decisions.md` with pros/cons of each option.
-Recommend specific stack for this project.
-
-## Acceptance Criteria
-- [ ] Free-tier options researched for each component
-- [ ] Pricing and limits documented
-- [ ] Recommended stack chosen and documented
-- [ ] Cost estimate for year 1: $0
-EOF
-)" \
-  --label "agent,task,research" \
-  --assignee "@me"
-```
-
-**Also update `.agents/state.json` context**:
-```json
-{
-  "context": {
-    "tools": {
-      "copilot": true,
-      "claude_code_cli": [user's answer: true/false]
-    },
-    "budget": "free",  // or "paid" or "tlb"
-    "deployment_options": "pending_research"  // will be filled in by TASK-000
-  }
-}
-```
-
-**If the user answered "Paid services"**, use production tooling immediately in the scaffold.
-
-**If the user answered "Paid services"**, use production tooling immediately in the scaffold.
-
-### 7D: MODULES.md for Complex Projects
-
-After generating the task backlog, analyze the PRD for complexity:
-
-**Trigger**: If the PRD contains **3 or more distinct functional areas** (e.g., auth + API + frontend + database + infra), generate `.agents/MODULES.md`.
-
-For each module, determine:
-- `Status`: always starts as `design`
-- `Files`: planned directory (e.g., `src/auth/`, `src/api/`)
-- `Depends On`: which other modules must complete first
-- `Notes`: key tech decisions from the PRD (framework choice, schema approach, etc.)
-
-Generate the file:
-
-```markdown
-# Project Modules
-
-> Auto-generated by /init-project on [date].
-> Run `/list-modules` for status table or `/show-graph` for dependency graph.
-
-## [module-name]
-- **Status**: `design`
-- **Files**: [path]/ ([estimated N files])
-- **Depends On**: [list other module names, or `none`]
-- **Owner**: engineer
-- **Last Updated**: [today's date]
-- **Notes**: [key tech decisions from PRD]
-```
-
-After generating MODULES.md, also output a **build order** to the user:
+## Phase 10: Post-Scaffold Summary
 
 ```
-## Build Order
+## ✅ Project Initialized
 
-Parallel groups (modules in the same group have no dependency between them):
-  Group 1 (start immediately):  core, [other independent modules]
-  Group 2 (after Group 1):      auth, database
-  Group 3 (after Group 2):      api
-  Group 4 (after Group 3):      frontend
-  Group 5 (any time):           infra
+**[Project Name]** is ready to build.
 
-Critical path: core → auth → api → frontend ([N] sequential steps)
-```
-
-Tell the user: `"Complex project detected — MODULES.md generated. Run /list-modules to see status or /show-graph for the dependency graph."`
-
-**If fewer than 3 modules**: skip this step entirely — no MODULES.md needed.
-
-### 7E: Post-Scaffolding Messaging
-
-After all scaffolding is complete, show the user a completion banner with next steps based on their setup:
-
-```markdown
-## ✅ Project Scaffolded
-
-Your project is ready. Here's what's next based on your setup:
-
-**Your Setup:**
-- Tools: [Copilot only / Copilot + Claude Code CLI]
+Setup:
+- Tools: [Copilot only / Copilot + CLI]
 - Budget: [Free / Paid / TBD]
+- Stack: [confirmed stack]
+- Tasks: [N] tasks queued
 
-**Tech Stack (recommended from research):**
-- Framework: [from research]
-- Database: [free/paid tier]
-- Deployment: [from budget research if free tier]
+Research: .agents/research/[slug].md
+GitHub Issues: [repo link]
 
-**Complex Project Info:**
-- Run `/list-modules` to see module status
-- Run `/show-graph` to visualize the dependency graph
-- MODULES.md saved to `.agents/MODULES.md`
-
-**First Steps:**
-1. Review GitHub Issues: [link to repository issues]
-2. Approve the research findings: `.agents/research/[slug].md`
-3. Start with TASK-001: [next recommended task]
-
-**Tips:**
-- If Copilot feels tight on context for large files, use `/mvp` mode
-- If you run out of 160k context, install Claude Code CLI, then `/setup-budget` to activate routing
-- Check `.agents/state.json` anytime to see research findings and decisions
+Next: TASK-001 — [title]
 ```
 
 ---
 
-## Stack → Library Mapping (for 7B MCP Config)
+## Phase 11: Handoff to TASK-001
 
-| Stack | Libraries to include |
-|-------|---------------------|
-| Next.js / React | nextjs, react, react-dom |
-| Django / Python | django, fastapi, sqlalchemy |
-| Go + Echo/Gin | go-stdlib, echo, gin |
-| Rails / Ruby | rails, activerecord |
-| Vue | vue, nuxt |
-| Svelte | svelte, sveltekit |
-| Flutter | flutter, dart |
-| iOS / Swift | swift, swiftui |
+```
+╔══════════════════════════════════════════════════════════════╗
+║  🔀 SWITCH TO:  @engineer   |   MODEL:  Sonnet             ║
+╚══════════════════════════════════════════════════════════════╝
+```
 
-Add only the libraries detected in the PRD. Do not add unused ones.
+1. Set `state.json` → `handoff.approved_by_user: true`, `handoff.target_agent: "[agent]"`
+2. Write TASK-001 details to `.agents/handoff.md`
+3. Tell the user:
 
+> Open a **new chat** and select the **@[agent]** agent from the Copilot chat panel. Then run `/handoff-to-[agent]` to begin TASK-001.
+>
+> The agent will read `.agents/state.json` and `.agents/handoff.md` automatically — no context needed from this chat.
+
+---
+
+## Notes
+
+- The raw PRD is **never stored** in state files — too large, too noisy. The brief is the canonical reference.
+- If the PRD has phase/milestone structure, preserve that as task groupings (`phase: "MVP"`, `phase: "v1.1"`).
+- Third-party integrations (Stripe, Supabase, etc.) → flag in `state.json` under `project.external_dependencies`.
+- If the user runs `/init-project` a second time on the same project (Phase 0 triggers), they lost context from a previous chat. The safety check prevents data loss.

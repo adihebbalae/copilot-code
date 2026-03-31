@@ -166,7 +166,7 @@ git push
 
 **Don't** retrofit agents onto 2 years of existing code. Instead:
 
-1. **Next feature?** Select Manager, run `/init-project` (or `/digest-prd` for large features)
+1. **Next feature?** Select Manager, run `/init-project` (works with any PRD size — point to a file or paste inline)
 2. **Bug fix?** Select Engineer, describe the fix, paste relevant code
 3. **Security review?** Select Security, paste code paths
 4. **Code refactor?** Start with Engineer; if risky, add Security review
@@ -195,7 +195,7 @@ When Manager starts a task, it mentions: *"I'll add project-specific MCPs/skills
 
 | When | Who | Usage |
 |------|-----|-------|
-| New feature | PM + Lead Eng | Run `/digest-prd`, plan with Manager |
+| New feature | PM + Lead Eng | Run `/init-project`, plan with Manager |
 | Implementation | Engineer | Use `/handoff-to-engineer` for complex parts |
 | Code review | Tech Lead | Run Security audit before merging |
 | Deployment | DevOps | Use quality-gate before pushing main |
@@ -257,7 +257,7 @@ Agents are **tools**, not process.
 
 ## **Next Steps After Retrofitting**
 
-1. **Invite team**: Show them `/init-project` or `/digest-prd` for next feature
+1. **Invite team**: Show them `/init-project` for next feature
 2. **Document conventions**: Fill out "Project Conventions" section in copilot-instructions.md
 3. **Run a test task**: Pick a small feature, let Manager plan it; let Engineer implement
 4. **Iterate**: Adjust instructions based on what works/doesn't work

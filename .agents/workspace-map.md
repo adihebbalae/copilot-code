@@ -21,9 +21,8 @@
     handoff-to-security.prompt.md   # Quick handoff template → Security
     handoff-to-designer.prompt.md   # Quick handoff template → Designer
     handoff-to-consultant.prompt.md # Quick handoff template → Consultant
-    init-project.prompt.md          # PRD intake, project scaffolding, GitHub Issues backlog, Context7 MCP
+    init-project.prompt.md          # PRD intake (file/paste/idea), research, scaffolding, GitHub Issues, Context7 MCP
     mvp.prompt.md                   # MVP mode: max velocity, aggressive parallelization, deferred gates
-    digest-prd.prompt.md            # Digest large PRDs (500-2000+ lines) into brief + task backlog
     review-dependencies.prompt.md   # Pre-handoff dependency vetting for supply chain security
     retrofit.prompt.md              # Retrofit existing projects; IDE-specific (VS Code, JetBrains, Eclipse, Xcode)
     learn.prompt.md                 # Extract session patterns → copilot-instructions.md + Copilot Memory

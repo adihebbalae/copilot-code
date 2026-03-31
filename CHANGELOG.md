@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-03-31
+
+### Breaking Change
+- **`/digest-prd` removed** — Deleted entirely. `/init-project` now handles all input types: PRD file path, inline paste, or raw idea with no PRD. The architectural reason for two commands (inline context limit) is obsolete — agents read files directly. There is no migration needed: just use `/init-project`.
+
+### Added
+- **Phase 0: Safety check** — `/init-project` now detects existing `state.json` at startup. If the project is already initialized, it shows the current project name, status, and active task, then offers choices: continue (switch to engineer) or overwrite (requires explicit confirmation `"yes overwrite"`). Prevents silent data loss.
+- **Phase 1: Smart PRD detection** — Priority order: (1) file path in `$ARGUMENTS`, (2) auto-scan root for `prd.md`, `PRD.md`, `*prd*.md`, `*spec*.md`, `*requirements*.md`, (3) if multiple files found, list and ask user to pick, (4) if none found, build PRD inline via Socratic questioning. No second command needed.
+- **Inline PRD Builder** — When no PRD exists, `/init-project` runs the full Socratic interrogation (problem, users, features, constraints, stack, timeline) inline. Saves result to `.dev/prd/original.md` and continues. User never needs to know `/prd-builder` exists.
+- **PRD compression step (Phase 2)** — Immediately after reading any PRD, compresses to a ~50-line Project Brief and drops the raw PRD from context. Solves context overflow for large PRDs (2000+ lines) without sacrificing depth — Manager operates only on the brief from this point forward.
+- **Architecture decision phase** — Explicit phase for surfacing and resolving architecture choices (monolith vs. microservice, REST vs. GraphQL, auth strategy) before scaffolding. Choices recorded in `state.json`.
+- **Unified 11-phase flow**: Phase 0 (safety), 1 (detect), 1.5 (stage), 2 (compress), 3 (research), 4 (team setup), 5 (zero ambiguity), 6 (architecture), 7 (tasks), 8 (plan review), 9 (scaffold), 10 (summary), 11 (handoff).
+
+### Changed
+- **`/init-project` description** updated to reflect universal input handling
+- **README** prompts table updated — removed `/digest-prd` row, updated `/init-project` description
+- **RETROFIT.md** — all references to `/digest-prd` replaced with `/init-project`
+- **`.agents/workspace-map.md`** — removed `digest-prd.prompt.md` entry, updated `init-project` description
+- **`update-boilerplate.prompt.md`** — removed `digest-prd` from auto-update list
+
+### Why
+Two commands for one workflow created confusion (users ran both, getting questions skipped or work overwritten). The only technical reason for `/digest-prd` was `$ARGUMENTS` context limits — now irrelevant since agents read files directly. One command with smart detection is strictly better: less cognitive overhead, no accidental double-initialization, no stale/skipped phases. Context compression via brief extraction solves the large-PRD problem cleanly without multi-chat complexity.
+
+## [2.3.2] - 2026-03-31
+
+### Added
+- **Manager model selection strategy** — Both `/init-project` and `/digest-prd` now explicitly specify model allocation: Opus/Sonnet for planning phases (1–6), default to Haiku for clarifying questions to conserve tokens. Tasks get their optimal model assignment (Engineer: Sonnet, Security: Opus, etc.). Provides clear guidance on token efficiency without sacrificing quality.
+- **PRD staging system** — New Phase 0.5 in `/init-project` and Phase 1.5 in `/digest-prd` move raw PRDs to `.dev/prd/original.md` immediately after intake. Keeps workspace root clean, prevents accidental commits of planning artifacts, and establishes `.dev/` as the canonical temporary folder for all projects.
+- **`.dev/` folder gitignore requirement** — Both prompts now ensure `.dev/` and `_dev/` are in final `.gitignore`. Phase 5 (cleanup) verifies and adds entries if missing. Guarantees temporary planning files never commit.
+
+### Why
+Long PRDs and planning processes create temporary artifacts that clutter the project root and risk accidental commits. By systematically staging PRDs into `.dev/prd/` and ensuring it's gitignored, every project starts clean. Model selection guidance makes token allocation explicit — a clear win for budget-conscious workflows.
+
+## [2.3.1] - 2026-03-31
+
+### Changed
+- **`/digest-prd` zero-ambiguity gate** — Upgraded Phase 3 from "Clarify Blockers Only" to "Clarify Until Zero Ambiguity" with explicit criteria and deeper probing instructions. Phase 9 Reflection Gate now explicitly confirms "Zero Ambiguity Cleared" and validates no hidden assumptions remain. Matches robustness of `/init-project` when handling long, complex PRDs. Prevents downstream agents from inheriting vague requirements.
+
+### Why
+`/digest-prd` is designed for 500–2000+ line PRDs where ambiguity risk is highest. By applying the same zero-ambiguity interrogation pattern from `/init-project`, agents can execute with confidence rather than guessing at intent. Critical when PRDs are dense and contradictory.
+
 ## [2.3.0] - 2026-03-29
 
 ### Added

@@ -24,7 +24,7 @@ Then:
 
 Paste your PRD. Research runs automatically. That's it — **PRD → Research → Project.**
 
-> **Note**: `/init-project` and `/digest-prd` both handle the `.gitignore.project` rename automatically.
+> **Note**: `/init-project` handles the `.gitignore.project` rename automatically.
 
 ## Adaptive Workflow (Tools & Budget)
 
@@ -217,9 +217,8 @@ See [Security Agent](Security.agent.md) for full dependency review process.
 |--------|----------|
 | `/quickstart` | Interactive onboarding for first-time users (start here!) |
 | `/prd-builder` | Build a comprehensive PRD from scratch using Socratic questioning |
-| `/init-project` | PRD intake, full scaffolding, GitHub Issues backlog, Context7 MCP config |
+| `/init-project` | PRD intake (file, paste, or idea), full scaffolding, research, GitHub Issues, Context7 MCP |
 | `/mvp` | Max velocity mode: aggressive parallelization, deferred gates, scope razor, parallel Engineer sessions |
-| `/digest-prd` | Digest large PRDs (500–2000+ lines) into brief + task backlog |
 | `/review-dependencies` | Pre-handoff dependency vetting (supply chain security) |
 | `/remember-handoff` | Write handoff to Copilot Memory — next agent reads it automatically |
 | `/retrofit` | Retrofit existing projects (VS Code, JetBrains, Eclipse, Xcode) |

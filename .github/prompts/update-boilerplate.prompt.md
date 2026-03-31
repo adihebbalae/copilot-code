@@ -43,7 +43,6 @@ Compare these boilerplate-owned files between `/tmp/copilot-code-latest/` and th
 - `.github/prompts/handoff-to-*.prompt.md`
 - `.github/prompts/init-project.prompt.md`
 - `.github/prompts/mvp.prompt.md`
-- `.github/prompts/digest-prd.prompt.md`
 - `.github/prompts/review-dependencies.prompt.md`
 - `.github/prompts/remember-handoff.prompt.md`
 - `.github/prompts/learn.prompt.md`
