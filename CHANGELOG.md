@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-04-01
+
+### Added
+- **41 marketing & engineering skills** — Added full skill library to both `.github/skills/` and `.claude/skills/`: ab-test-setup, ad-creative, ai-seo, analytics-tracking, churn-prevention, cold-email, competitor-alternatives, content-strategy, copy-editing, copywriting, email-sequence, form-cro, free-tool-strategy, launch-strategy, marketing-ideas, marketing-psychology, onboarding-cro, page-cro, paid-ads, paywall-upgrade-cro, popup-cro, pricing-strategy, product-marketing-context, programmatic-seo, referral-program, revops, sales-enablement, schema-markup, seo-audit, signup-flow-cro, site-architecture, social-content (plus existing technical skills).
+- **`.claude/skills/` tree** — All skills now mirrored under `.claude/skills/` for Claude Code compatibility. Files are byte-for-byte identical to `.github/skills/` counterparts.
+
+### Changed
+- **`CLAUDE.md` synced with `copilot-instructions.md`** — Added Boilerplate Dev Mode notes, Version Management guidance, Retrofit Mode note, Agent System Protocol, Code Standards, and Communication Principles to `CLAUDE.md`. Both files now share the same core protocol content, ensuring Claude Code and GitHub Copilot get equivalent project context.
+
+### Why
+Skills added to one AI tool's folder must exist in the other to prevent context drift — agents switching between Claude Code and GitHub Copilot must see the same skill library. `CLAUDE.md` was missing the boilerplate meta-notes and shared agent protocol that `copilot-instructions.md` carries, creating a gap where Claude Code sessions would lack critical operational context.
+
 ## [2.4.0] - 2026-03-31
 
 ### Breaking Change
