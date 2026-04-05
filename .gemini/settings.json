@@ -1,0 +1,19 @@
+{
+  "general": {
+    "defaultApprovalMode": "auto_edit"
+  },
+  "hooks": {
+    "AfterTool": [
+      {
+        "matcher": "write_file|replace|create_file",
+        "hooks": [
+          {
+            "name": "lint-on-save",
+            "type": "command",
+            "command": "cd \"$GEMINI_PROJECT_DIR\" && { npm run lint --silent --if-present 1>&2 || python -m flake8 --quiet 1>&2 || true; } && printf '{\"decision\":\"allow\"}'"
+          }
+        ]
+      }
+    ]
+  }
+}

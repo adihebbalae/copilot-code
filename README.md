@@ -2,7 +2,7 @@
 
 **PRD → Project.** Paste a product requirements doc, answer a few questions, and a multi-agent system plans, builds, tests, and commits the code — while you review.
 
-Orchestration layer for GitHub Copilot + Claude Code: Manager (Haiku) coordinates, Engineer (Sonnet) implements, Security audits before every push. Works in VS Code and Claude Code CLI, both sharing the same state files.
+Orchestration layer for GitHub Copilot, Claude Code, Codex CLI, and Gemini CLI: Manager (Haiku) coordinates, Engineer (Sonnet) implements, Security audits before every push. All modes share the same state files.
 
 ## Quick Start
 
@@ -32,7 +32,7 @@ When you run `/init-project`, Manager asks two setup questions to adapt the work
 
 | Question | Options | Impact |
 |----------|---------|--------|
-| **Do you have Claude Code CLI?** | Yes / No | No CLI? Everything routes through GitHub Copilot (160k context). Have CLI? Unlock Complex Project Mode for 20+ file projects. |
+| **Do you have a CLI agent?** | Yes / No | No CLI? Everything routes through GitHub Copilot (160k context). Have CLI (Claude Code, Codex, or Gemini)? Unlock Complex Project Mode for 20+ file projects. |
 | **What's your budget?** | Free tier / Paid / TBD | Free? Manager adds a research task to find free deployment options. Paid? Use production-grade tools from day one. |
 
 **Why?** This ensures the boilerplate works for everyone: Copilot-only users, budget-conscious teams, and power users with CLI access. Your answers are saved in `.agents/state.json` and used by Manager for routing decisions.
@@ -45,9 +45,9 @@ When you run `/init-project`, Manager asks two setup questions to adapt the work
 
 To update an existing project to the latest boilerplate version, run `/update-boilerplate` from the Manager agent.
 
-## Dual-Mode Workflow
+## Multi-Mode Workflow
 
-This boilerplate works in two modes. Both use the same agent definitions.
+This boilerplate works in four modes. All share the same state files.
 
 ### Mode 1: VS Code (GitHub Copilot)
 
@@ -70,15 +70,46 @@ claude
 
 Hooks in `.claude/settings.json` automatically run lint after every file edit — no manual gate-running needed.
 
+### Mode 3: Codex CLI
+
+Install Codex CLI, run `codex` from the project root. Codex reads `AGENTS.md` as a bootstrap.
+
+```bash
+# Install
+npm install -g @openai/codex
+# or: brew install --cask codex
+
+# Start from project root
+codex
+```
+
+Codex operates in **manual handoff mode** — the Manager plans and writes to `.agents/handoff.md`, and you open a new `codex` session for each agent role. All state is shared via `.agents/`.
+
+### Mode 4: Gemini CLI
+
+Install Gemini CLI, run `gemini` from the project root. Gemini reads `GEMINI.md` as a bootstrap.
+
+```bash
+# Install
+npm install -g @google/gemini-cli
+
+# Start from project root (sign in with Google on first run)
+gemini
+```
+
+Hooks in `.gemini/settings.json` automatically run lint after every file write. Gemini operates in **manual handoff mode** — the Manager plans and writes to `.agents/handoff.md`, and you open a new `gemini` session for each agent role.
+
 ### Switching Modes
 
-Both modes share the same state files (`.agents/state.json`, `.agents/state.md`). You can switch mid-project:
+All modes share the same state files (`.agents/state.json`, `.agents/state.md`). You can switch mid-project:
 
 | What you need | Use |
 |---------------|-----|
 | VS Code native IDE experience, Copilot billing | Mode 1 |
-| Terminal-first, long-running autonomous tasks, Claude billing | Mode 2 |
+| Autonomous subagents, long-running tasks, Claude billing | Mode 2 |
 | Maximum autonomy (1M context, hooks, extended thinking) | Mode 2 |
+| OpenAI models, ChatGPT plan billing | Mode 3 |
+| Free tier (60 req/min, 1k req/day), Google account auth | Mode 4 |
 | Tight VS Code integration (extensions, LSP, editor tools) | Mode 1 |
 
 ## Architecture
