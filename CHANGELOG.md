@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-04-05
+
+### Added
+- **`/auto-run` prompt + skill** — Run all approved tasks to completion without manual intervention. Manager pre-generates handoff files for every pending task, then either loops through Copilot-native subagents (small tasks) or launches the CLI orchestrator script (large tasks).
+- **`.github/scripts/auto-run.ps1`** — PowerShell orchestrator that drives Claude Code CLI through the full task queue. Features: sequential execution via `claude --agent engineer -p`, security scans between tasks (`claude --agent security -p`), configurable checkpoints (default 45s), rate-limit detection with 5-hour cooldown, max 3 retries per task with hard-stop on failure, dry-run mode, and automatic state.json updates throughout.
+- **`.github/skills/auto-run/SKILL.md`** — Full protocol for the Manager: routing decision (Copilot-native vs CLI), handoff generation, auto_run config in state.json, script launch, post-completion review, and error recovery guidance.
+- **Section 13 in `manager.agent.md`** — Autonomous Task Runner documentation and skill suggestion routing.
+- **`auto_run` field in state.json** — New optional config: `task_order`, `checkpoint_seconds`, `max_retries`, `security_between_tasks`, `rate_limit_wait_hours`.
+
+### Why
+The manual ping-pong workflow (Manager writes handoff → user switches to CLI → Engineer runs → user switches back → repeat) is the single biggest friction point when executing multi-task plans. For a 10-task project, that's 20+ manual context switches. The auto-run system eliminates all of them: one `/auto-run` command generates everything, one script execution drives it to completion. Rate-limit handling (auto-detect + 5h cooldown) addresses Claude Code CLI's ~5-10 task throttle window. The 45-second checkpoint between tasks preserves the user's ability to Ctrl+C and intervene without requiring active monitoring.
+
+## [2.6.0] - 2026-04-02
+
+### Added
+- **`AGENTS.md`** — Codex CLI bootstrap. Codex reads `AGENTS.md` from the project root as its context file. Configures the Manager role, agent protocol, state file references, and manual handoff instructions for OpenAI's Codex CLI (`@openai/codex`).
+- **`GEMINI.md`** — Gemini CLI bootstrap. Gemini reads `GEMINI.md` from the project root as its context file. Identical protocol structure to `CLAUDE.md`/`AGENTS.md` with Gemini-specific notes (context refresh, hooks, approval mode).
+- **`.gemini/settings.json`** — Project-level Gemini CLI settings. Enables `auto_edit` approval mode and adds an `AfterTool` hook that runs lint automatically after every file write — mirrors the behavior of `.claude/settings.json`.
+- **Mode 3 (Codex CLI)** and **Mode 4 (Gemini CLI)** in `README.md` — "Dual-Mode Workflow" renamed to "Multi-Mode Workflow". Added install instructions, startup commands, and mode selection guidance for both new CLIs.
+
+### Changed
+- **README.md**: "Dual-Mode Workflow" → "Multi-Mode Workflow". Switching Modes table updated to include Codex (OpenAI billing, ChatGPT plan) and Gemini (free tier, Google auth) as options. Adaptive Workflow question updated from "Claude Code CLI?" to "a CLI agent?" to cover all three CLIs.
+- **README.md description** updated to list all four supported tools: GitHub Copilot, Claude Code, Codex CLI, and Gemini CLI.
+
+### Why
+Claude Code is not the only terminal-first AI CLI. Codex CLI (OpenAI) and Gemini CLI (Google, 60 req/min free tier) are now production-grade alternatives used by large segments of the developer community. Adding `AGENTS.md` and `GEMINI.md` costs near-zero maintenance (same content as `CLAUDE.md`, different CLI conventions) and opens the boilerplate to users on OpenAI billing, ChatGPT plans, or those who prefer Gemini's free tier. The `.gemini/settings.json` hook mirrors the Claude Code lint-on-save behavior, ensuring all three CLI modes have equivalent automatic quality gates.
+
 ## [2.5.0] - 2026-04-01
 
 ### Added

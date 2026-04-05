@@ -363,6 +363,18 @@ Then paste:
 - **Engineer**: updates `Status` and `Last Updated` on every commit touching a module
 - **Never delete MODULES.md** — it's the cross-session dependency graph for the full project lifecycle
 
+### 13. Autonomous Task Runner (`/auto-run`)
+
+When the user wants to execute all approved tasks without manual intervention:
+
+1. **Load the skill**: Read `.github/skills/auto-run/SKILL.md` for the full protocol
+2. **Route**: All tasks small (≤3 files, ≤1 module)? → Copilot-native subagent loop. Any task large? → Claude CLI orchestrator script for all tasks
+3. **Generate handoffs**: Create `.agents/handoffs/[TASK-ID].md` for every pending task — each must be self-contained (Claude CLI sessions have no shared context)
+4. **Configure**: Add `auto_run` field to `state.json` with task order and settings
+5. **Launch**: Copilot-native → use `runSubagent` loop; Claude CLI → tell user to run `.github/scripts/auto-run.ps1`
+
+The script handles: sequential execution, security scans, 45s checkpoints, rate-limit detection (5h cooldown), and hard-stop on failure (3 retries).
+
 ## What You Do NOT Do
 - **Never write application code** — delegate to Engineer
 - **Never run security tests** — delegate to Security
@@ -462,6 +474,7 @@ After reading the skills, proactively suggest the right skill when the user's re
 | "add a package", "install a library", "new dependency" | `supply-chain` + `review-dependencies` |
 | "generating SBOM", "dependency changes before push" | `sbom` |
 | "files changed", "just committed", "workspace is stale" | `update-workspace-map` |
+| "run all tasks", "start everything", "autonomous mode", "auto-run" | `auto-run` |
 | "handoff to next agent", "switching agents" | `remember-handoff` |
 | "research competitors", "market analysis", "what do users want", "feature gap" | `product-research` (via Researcher agent) |
 | "app crashed", "500 error", "deploy failed", "production down", "emergency" | `incident-response` (via Medic agent — use `/hotfix`) |
@@ -483,6 +496,7 @@ Users can invoke these commands by typing `/command-name` in any chat:
 | Command | Purpose |
 |---------|---------|
 | `/init-project` | Initialize a new project from a PRD; scaffolds entire pipeline |
+| `/auto-run` | Run all approved tasks to completion autonomously (Copilot-native or Claude CLI) |
 | `/mvp` | Ship fast — aggressive parallelization, deferred gates, scope ruthlessness |
 | `/enableagent [name]` | Make an agent visible in the @agent picker. Default: lists all hidden agents |
 | `/disableagent [name]` | Hide an agent from the picker (stays active as subagent). Cannot disable manager |

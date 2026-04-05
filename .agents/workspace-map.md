@@ -35,12 +35,16 @@
     update-workspace-map/SKILL.md     # Auto-regenerate workspace-map.md post-commit
     supply-chain/SKILL.md             # Standalone 4-gate supply chain security (submittable to awesome-copilot)
     sbom/SKILL.md                     # Native SBOM generation via syft/cdxgen + CVE scan via osv-scanner
+    auto-run/SKILL.md                 # Autonomous task runner — run all tasks to completion
+  scripts/
+    auto-run.ps1                      # PowerShell orchestrator for Claude CLI autonomous execution
 
 .agents/
   state.json                     # Machine-readable project state (source of truth)
   state.md                       # Human-readable project dashboard
   workspace-map.md               # THIS FILE — directory reference
   handoff.md                     # Current inter-agent handoff prompt
+  handoffs/                      # Pre-generated handoffs for auto-run (one per task)
 
 .gitignore                       # TEMPLATE .gitignore (commits all agent files)
 .gitignore.project               # PROJECT .gitignore (rename after cloning — strips agent files)
