@@ -16,6 +16,12 @@
     - Manager has pre-generated handoff files in .agents/handoffs/
     - Tasks defined in .agents/state.json with auto_run.task_order
 
+    Usage Tracking:
+    Uses --output-format json on every 'claude -p' call (a format flag only, NOT an extra
+    API call or extra token spend). Parses the JSON output for cost_usd, input_tokens,
+    output_tokens, and duration_ms. Displays usage inline after each task and shows a
+    full breakdown table at the end. Falls back to wall-clock time if token data is absent.
+
 .PARAMETER CheckpointSeconds
     Pause duration between tasks in seconds. Default: 45.
     During this window you can Ctrl+C to abort.
@@ -154,36 +160,188 @@ function Test-RateLimited {
     return $false
 }
 
+function Get-UsageFromJsonOutput {
+    # Parses claude --output-format json output for cost/token fields.
+    # --output-format json is a format flag only - it does NOT make an extra API call.
+    param([string]$RawOutput)
+
+    $usage = @{
+        InputTokens  = 0
+        OutputTokens = 0
+        CostUsd      = [double]0
+        DurationMs   = 0
+        Available    = $false
+    }
+
+    try {
+        # The JSON blob may be mixed with stderr lines; find the last complete JSON object
+        $jsonLines = @($RawOutput -split "`n" | Where-Object {
+            $t = $_.Trim(); $t.StartsWith('{') -and $t.EndsWith('}')
+        })
+        if ($jsonLines.Count -eq 0) { return $usage }
+
+        $data = $jsonLines[-1] | ConvertFrom-Json
+
+        # Try root-level fields
+        if ($data.PSObject.Properties.Name -contains 'input_tokens')  { $usage.InputTokens  = [int]$data.input_tokens }
+        if ($data.PSObject.Properties.Name -contains 'output_tokens') { $usage.OutputTokens = [int]$data.output_tokens }
+        if ($data.PSObject.Properties.Name -contains 'cost_usd')      { $usage.CostUsd      = [double]$data.cost_usd }
+        if ($data.PSObject.Properties.Name -contains 'duration_ms')   { $usage.DurationMs   = [int]$data.duration_ms }
+
+        # Try nested usage object (Anthropic API style)
+        if ($data.usage) {
+            if ($data.usage.PSObject.Properties.Name -contains 'input_tokens')  { $usage.InputTokens  = [int]$data.usage.input_tokens }
+            if ($data.usage.PSObject.Properties.Name -contains 'output_tokens') { $usage.OutputTokens = [int]$data.usage.output_tokens }
+        }
+        # Try nested cost object (statusLine style)
+        if ($data.cost) {
+            if ($data.cost.PSObject.Properties.Name -contains 'total_cost_usd')    { $usage.CostUsd   = [double]$data.cost.total_cost_usd }
+            if ($data.cost.PSObject.Properties.Name -contains 'total_duration_ms') { $usage.DurationMs = [int]$data.cost.total_duration_ms }
+        }
+
+        if ($usage.InputTokens -gt 0 -or $usage.OutputTokens -gt 0 -or $usage.CostUsd -gt 0) {
+            $usage.Available = $true
+        }
+    }
+    catch { }
+
+    return $usage
+}
+
+function Write-InlineUsage {
+    param([hashtable]$Usage, [long]$ElapsedMs)
+
+    $ms       = if ($Usage.DurationMs -gt 0) { $Usage.DurationMs } else { $ElapsedMs }
+    $sec      = [math]::Round($ms / 1000)
+    $mins     = [math]::Floor($sec / 60)
+    $secs     = $sec % 60
+    $timeStr  = if ($mins -gt 0) { "${mins}m ${secs}s" } else { "${secs}s" }
+
+    if ($Usage.Available) {
+        $costStr = '${0:F4}' -f $Usage.CostUsd
+        Write-Host ("    Usage: {0:N0} in / {1:N0} out tokens  |  {2}  |  {3}" -f `
+            $Usage.InputTokens, $Usage.OutputTokens, $costStr, $timeStr) -ForegroundColor DarkCyan
+    }
+    else {
+        Write-Host "    Duration: $timeStr  (token data not in CLI output)" -ForegroundColor DarkGray
+    }
+}
+
+function Show-UsageTable {
+    param(
+        [hashtable]$Registry,
+        [System.Collections.ArrayList]$CompletedIds,
+        [long]$TotalElapsedMs
+    )
+
+    if ($Registry.Count -eq 0) { return }
+
+    $anyAvailable = $false
+    foreach ($u in $Registry.Values) { if ($u.Available) { $anyAvailable = $true; break } }
+
+    Write-Host ""
+    Write-Host "  Usage Breakdown:" -ForegroundColor White
+    Write-Host "  $([string]::new([char]0x2500, 57))" -ForegroundColor DarkGray
+    Write-Host ("  {0,-12}  {1,8}  {2,8}  {3,9}  {4}" -f "Task", "In tok", "Out tok", "Cost", "Time") -ForegroundColor Gray
+    Write-Host "  $([string]::new([char]0x2500, 57))" -ForegroundColor DarkGray
+
+    $totalIn   = 0
+    $totalOut  = 0
+    $totalCost = [double]0
+
+    foreach ($id in $CompletedIds) {
+        if (-not $Registry.ContainsKey($id)) { continue }
+        $u    = $Registry[$id]
+        $ms   = if ($u.DurationMs -gt 0) { $u.DurationMs } else { $u.ElapsedMs }
+        $sec  = [math]::Round($ms / 1000)
+        $mins = [math]::Floor($sec / 60)
+        $secs = $sec % 60
+        $tStr = if ($mins -gt 0) { "${mins}m ${secs}s" } else { "${secs}s" }
+
+        if ($u.Available) {
+            $totalIn   += $u.InputTokens
+            $totalOut  += $u.OutputTokens
+            $totalCost += $u.CostUsd
+            $cStr = '${0:F4}' -f $u.CostUsd
+            Write-Host ("  {0,-12}  {1,8:N0}  {2,8:N0}  {3,9}  {4}" -f $id, $u.InputTokens, $u.OutputTokens, $cStr, $tStr) -ForegroundColor Gray
+        }
+        else {
+            Write-Host ("  {0,-12}  {'N/A',8}  {'N/A',8}  {'N/A',9}  {1}" -f $id, $tStr) -ForegroundColor DarkGray
+        }
+    }
+
+    Write-Host "  $([string]::new([char]0x2500, 57))" -ForegroundColor DarkGray
+
+    $eSec  = [math]::Round($TotalElapsedMs / 1000)
+    $eMins = [math]::Floor($eSec / 60)
+    $eSecs = $eSec % 60
+    $eStr  = if ($eMins -gt 0) { "${eMins}m ${eSecs}s" } else { "${eSecs}s" }
+
+    if ($anyAvailable) {
+        $tCostStr = '${0:F4}' -f $totalCost
+        Write-Host ("  {0,-12}  {1,8:N0}  {2,8:N0}  {3,9}  {4}" -f "TOTAL", $totalIn, $totalOut, $tCostStr, $eStr) -ForegroundColor Cyan
+    }
+    else {
+        Write-Host "  Token data not available in CLI output." -ForegroundColor DarkGray
+        Write-Host "  Wall-clock total: $eStr" -ForegroundColor DarkGray
+        Write-Host "  Note: usage data requires Claude Code v2.1+ with --output-format json support." -ForegroundColor DarkGray
+    }
+}
+
 function Invoke-Claude {
     param(
         [string]$Agent,
         [string]$Prompt
     )
 
+    $emptyUsage = @{ InputTokens = 0; OutputTokens = 0; CostUsd = [double]0; DurationMs = 0; Available = $false }
+
     if ($DryRun) {
         Write-Host "    [DRY RUN] claude --agent $Agent -p ..." -ForegroundColor DarkGray
-        return @{ ExitCode = 0; Output = "[dry run - no execution]"; RateLimited = $false }
+        return @{ ExitCode = 0; Output = "[dry run - no execution]"; RawOutput = ""; RateLimited = $false; Usage = $emptyUsage; ElapsedMs = 0 }
     }
 
-    # Run Claude CLI and capture combined output
-    $output = $null
+    # Measure wall-clock time for this invocation
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+
+    $rawOutput = $null
     try {
-        $output = & claude --agent $Agent -p --dangerously-skip-permissions $Prompt 2>&1 |
-                  Out-String
+        # --output-format json: format flag only, NOT an extra API call or token spend.
+        # Returns a JSON blob containing the result text plus cost/usage metadata.
+        $rawOutput = & claude --agent $Agent -p --dangerously-skip-permissions --output-format json $Prompt 2>&1 |
+                     Out-String
     }
     catch {
-        $output = $_.Exception.Message
+        $rawOutput = $_.Exception.Message
     }
 
+    $sw.Stop()
     $exitCode = $LASTEXITCODE
     if ($null -eq $exitCode) { $exitCode = 0 }
 
-    $rateLimited = Test-RateLimited -Output $output -ExitCode $exitCode
+    # Extract plain text from JSON .result field for pattern matching (rate limit, CRITICAL, etc.)
+    $textOutput = $rawOutput
+    try {
+        $jsonLines = @($rawOutput -split "`n" | Where-Object {
+            $t = $_.Trim(); $t.StartsWith('{') -and $t.EndsWith('}')
+        })
+        if ($jsonLines.Count -gt 0) {
+            $parsed = $jsonLines[-1] | ConvertFrom-Json
+            if ($parsed.result) { $textOutput = [string]$parsed.result }
+        }
+    }
+    catch { }
+
+    $rateLimited = Test-RateLimited -Output ($rawOutput + ' ' + $textOutput) -ExitCode $exitCode
+    $usage       = Get-UsageFromJsonOutput -RawOutput $rawOutput
 
     return @{
         ExitCode    = $exitCode
-        Output      = $output
+        Output      = $textOutput
+        RawOutput   = $rawOutput
         RateLimited = $rateLimited
+        Usage       = $usage
+        ElapsedMs   = $sw.ElapsedMilliseconds
     }
 }
 
@@ -288,6 +446,7 @@ Write-Host "  Checkpoint:  ${CheckpointSeconds}s" -ForegroundColor White
 Write-Host "  Retries:     $MaxRetries per task" -ForegroundColor White
 Write-Host "  Security:    $(if ($SkipSecurity) { 'SKIPPED' } else { 'after each task' })" -ForegroundColor White
 Write-Host "  Rate limit:  wait ${RateLimitWaitHours}h on throttle" -ForegroundColor White
+Write-Host "  Usage:       tracked per task (--output-format json, no extra tokens)" -ForegroundColor White
 if ($DryRun) { Write-Host "  Mode:        DRY RUN" -ForegroundColor Yellow }
 Write-Host ""
 Write-Host "  Task queue:" -ForegroundColor Gray
@@ -303,10 +462,11 @@ if (-not $DryRun) {
 
 # ─── Main Loop ────────────────────────────────────────────────────────────────
 
-$completed = [System.Collections.ArrayList]::new()
-$failed    = [System.Collections.ArrayList]::new()
-$startTime = Get-Date
-$halted    = $false
+$completed     = [System.Collections.ArrayList]::new()
+$failed        = [System.Collections.ArrayList]::new()
+$startTime     = Get-Date
+$halted        = $false
+$usageRegistry = @{}   # taskId -> @{InputTokens, OutputTokens, CostUsd, DurationMs, ElapsedMs, Available}
 
 for ($i = 0; $i -lt $pendingTasks.Count; $i++) {
     $task     = $pendingTasks[$i]
@@ -408,6 +568,12 @@ for ($i = 0; $i -lt $pendingTasks.Count; $i++) {
     Write-TaskLine -TaskId $taskId -Title $taskTitle -Status "done" -Current $taskNum -Total $totalTasks
     [void]$completed.Add($taskId)
 
+    # Record and display usage for this task
+    $taskUsage = $result.Usage
+    $taskUsage.ElapsedMs = $result.ElapsedMs
+    $usageRegistry[$taskId] = $taskUsage
+    Write-InlineUsage -Usage $taskUsage -ElapsedMs $result.ElapsedMs
+
     # ── Security Scan ──
     if (-not $SkipSecurity) {
         Write-TaskLine -TaskId $taskId -Title $taskTitle -Status "security" -Current $taskNum -Total $totalTasks
@@ -472,6 +638,9 @@ $remainingIds = $pendingTasks | Where-Object { $_.id -notin $completed -and $_.i
 if ($remainingIds.Count -gt 0) {
     Write-Host "  $([char]0x23F8) $($remainingIds -join ', ')" -ForegroundColor Yellow
 }
+
+# Show per-task usage breakdown and totals
+Show-UsageTable -Registry $usageRegistry -CompletedIds $completed -TotalElapsedMs ([long]$elapsed.TotalMilliseconds)
 
 Write-Host ""
 if (-not $halted) {
