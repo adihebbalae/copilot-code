@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2026-04-08
+
+### Added
+- **`/attacca:quickstart`** (`claude-plugin/commands/quickstart.md`) — First-time welcome wizard. Prints the "Agents assembled. Give me the mission." banner, detects existing project state, and routes users to `initprd`, `init-project`, or a plain-English explainer. Catches users who type their task directly and guides them through setup.
+- **`/attacca:initprd`** (`claude-plugin/commands/initprd.md`) — Zero-questions init from a PRD file. Looks for `PRD.md`, `prd.md`, `BRIEF.md`, or `SPEC.md` in the project root, extracts project name/stack/tasks/mode, and writes the full `.agents/` workspace.
+- **`.claude-plugin/marketplace.json`** — Turns the Attacca repo into a distributable Claude Code marketplace. Install via `/plugin marketplace add adihebbalae/Attacca` + `/plugin install attacca@attacca`.
+- **`website/`** — Astro static site for the product landing page. Sections: hero with terminal install preview, 7-agent grid, 3-path onboarding, quality gates explainer, full commands table.
+- **`.github/workflows/deploy-website.yml`** — Auto-deploys the Astro site to GitHub Pages on push to `main` when `website/` files change.
+
+### Why
+Users had no guided entry point. `quickstart` + `initprd` give first-timers a clear path. The marketplace.json makes installation a two-command operation. The website gives the project a public face.
+
+## [3.2.0] - 2026-04-07
+
+### Added
+- **`karpathy-guidelines` skill** (`.github/skills/karpathy-guidelines/SKILL.md`) — Behavioral skill derived from Andrej Karpathy's [LLM coding pitfall observations](https://x.com/karpathy/status/2015883857489522876). Covers four principles: Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution. Loadable on-demand by any agent or Copilot.
+
+### Changed
+- **`copilot-instructions.md`** — Added new `## Implementation Discipline` section with: don't delete pre-existing dead code (mention it), senior engineer overcomplicated test, and ambiguity presentation directive (don't pick interpretations silently).
+- **`AGENTS.md` / `GEMINI.md`** — Synced `## Implementation Discipline` section to keep all base instruction files consistent.
+- **`engineer.agent.md`** — Updated Engineering Quality Checklist: dead code item now clarifies *your changes* vs pre-existing (mention, don't delete), and added explicit Simplicity check.
+
+### Why
+Karpathy's principles address the most common LLM coding failure modes: silent assumption-picking, bloated abstractions, and touching code you shouldn't. The three genuinely new additions (ambiguity surfacing, mention-don't-delete, overcomplicated test) weren't covered by existing principles. Everything else (research first, close the loop, no speculative features) was already present.
+
 ## [3.1.0] - 2026-07-26
 
 ### Added

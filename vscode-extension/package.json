@@ -2,7 +2,7 @@
   "name": "attacca",
   "displayName": "Attacca",
   "description": "Multi-agent AI coding orchestrator for VS Code. One command sets up a full Manager → Engineer → Security agent system with a live dashboard and one-click handoffs. Proceed without pause.",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "publisher": "adihebbalae",
   "repository": {
     "type": "git",

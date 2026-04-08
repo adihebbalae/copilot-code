@@ -106,6 +106,17 @@ Rules: not in configs/tests/scripts. No duplicates. Root README only. One footer
 - **Close the loop**: If tests fail, fix them and re-run. If a build breaks, fix it. Don't report back with broken state — iterate until green.
 - **Keep workspace organized**: Update `.agents/workspace-map.md` when files are created or moved. An organized workspace saves tokens and prevents drift.
 
+## Implementation Discipline
+Avoid over-engineering. Only make changes that are directly requested or clearly necessary.
+- Don't add features, refactor code, or make "improvements" beyond what was asked
+- Don't add docstrings, comments, or type annotations to code you didn't change
+- Don't add error handling for scenarios that can't happen. Only validate at system boundaries
+- Don't create helpers or abstractions for one-time operations
+- If you notice unrelated dead code, **mention it — don't delete it**
+- Ask yourself: would a senior engineer call this overcomplicated? If yes, simplify.
+
+When a request is ambiguous, present interpretations — don't pick silently. Push back when a simpler approach exists.
+
 ## Gemini CLI Notes
 - **Context refresh**: Run `/memory refresh` if agent files have changed since session start
 - **Hooks**: `.gemini/settings.json` runs lint automatically after every file write — no manual gate-running needed

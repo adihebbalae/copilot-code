@@ -20,7 +20,9 @@ Multi-agent AI coding orchestrator. Manager coordinates, Engineer builds, Securi
 - `security-audit` — OWASP Top 10 checklist
 
 **Commands** (user-invoked):
-- `/attacca:init-project` — set up `.agents/` state for a new project
+- `/attacca:quickstart` — **start here**: welcome wizard, detects your situation, routes you to the right setup
+- `/attacca:initprd` — drop a `PRD.md` in your project root and let me set up everything automatically
+- `/attacca:init-project` — interactive setup wizard (answers a few questions, builds `.agents/`)
 - `/attacca:handoff-to-engineer TASK-001` — delegate to Engineer
 - `/attacca:handoff-to-security TASK-001` — trigger security audit
 - `/attacca:handoff-to-designer TASK-001` — request design review
@@ -34,18 +36,32 @@ Multi-agent AI coding orchestrator. Manager coordinates, Engineer builds, Securi
 
 ## Install
 
-### Option 1: Install from git (recommended)
+### Option 1: One-step from GitHub (recommended)
 ```bash
-/plugin install https://github.com/adihebbalae/Attacca claude-plugin
+# Step 1 — add the Attacca marketplace (one-time, any machine)
+/plugin marketplace add adihebbalae/Attacca
+
+# Step 2 — install the plugin
+/plugin install attacca@attacca
+
+# Step 3 — run the welcome wizard
+/attacca:quickstart
 ```
 
-### Option 2: Test locally
+### Option 2: Official marketplace (once approved)
+```bash
+/plugin install attacca@claude-plugins-official
+/attacca:quickstart
+```
+
+### Option 3: Test locally
 ```bash
 git clone https://github.com/adihebbalae/Attacca
 claude --plugin-dir ./Attacca/claude-plugin
+/attacca:quickstart
 ```
 
-### Option 3: Submit to Anthropic Plugin Marketplace
+### Submit to Anthropic Plugin Marketplace
 After testing, submit at: `claude.ai/settings/plugins/submit`
 
 ---

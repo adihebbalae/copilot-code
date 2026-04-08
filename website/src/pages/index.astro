@@ -1,0 +1,564 @@
+---
+const GITHUB_URL = "https://github.com/adihebbalae/Attacca";
+
+const agents = [
+  { name: "Manager", role: "Plans, delegates, coordinates. Your primary contact. Never writes code.", icon: "◈" },
+  { name: "Engineer", role: "Writes code, runs tests, commits. Self-validates until green.", icon: "⟨⟩" },
+  { name: "Security", role: "Adversarial OWASP auditor. Isolated — never sees commit messages.", icon: "⟁" },
+  { name: "Designer", role: "UI/UX review, accessibility audits, component specs. No code.", icon: "◻" },
+  { name: "Researcher", role: "Competitive analysis, market sizing, user pain extraction.", icon: "⊙" },
+  { name: "Consultant", role: "Deep architectural reasoning. Expensive — use sparingly.", icon: "⌬" },
+  { name: "Medic", role: "Emergency incident responder. SEV 1 only: 500s, broken deploys.", icon: "⊕" },
+];
+
+const commands = [
+  { cmd: "/attacca:quickstart", desc: "First-time welcome wizard. Start here." },
+  { cmd: "/attacca:initprd", desc: "Drop PRD.md in root. Auto-builds the full .agents/ workspace." },
+  { cmd: "/attacca:init-project", desc: "Interactive setup — answers a few questions, creates state files." },
+  { cmd: "/attacca:handoff-to-engineer TASK-001", desc: "Delegate a task to the Engineer." },
+  { cmd: "/attacca:handoff-to-security TASK-001", desc: "Trigger a security audit before push." },
+  { cmd: "/attacca:handoff-to-designer TASK-001", desc: "Request UI/UX review." },
+  { cmd: "/attacca:handoff-to-researcher TASK-001", desc: "Start competitive research." },
+  { cmd: "/attacca:handoff-to-consultant TASK-001", desc: "Deep architectural reasoning." },
+];
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attacca — Build without pause.</title>
+  <meta name="description" content="A Claude Code plugin that gives you a seven-agent team. Manager plans, Engineer ships, Security audits before every push." />
+  <meta property="og:title" content="Attacca — Build without pause." />
+  <meta property="og:description" content="A Claude Code plugin that gives you a seven-agent team. Manager plans, Engineer ships, Security audits before every push." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="/Attacca/favicon.svg" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #07080f;
+      --surface:   #0f1117;
+      --surface2:  #161822;
+      --border:    rgba(255,255,255,0.07);
+      --border2:   rgba(255,255,255,0.12);
+      --accent:    #6ee7b7;
+      --accent2:   #a78bfa;
+      --text:      #e2e8f0;
+      --muted:     #8892a4;
+      --code-bg:   #0d1117;
+      --radius:    10px;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ─── NAV ─────────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 56px;
+      background: rgba(7,8,15,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: -0.01em;
+    }
+    .nav-logo span { color: var(--muted); font-weight: 400; margin-left: 6px; font-size: 0.85rem; }
+
+    .nav-actions { display: flex; gap: 0.75rem; align-items: center; }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--text);
+      background: transparent;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: rgba(110,231,183,0.06); }
+
+    /* ─── LAYOUT ──────────────────────────────────────────── */
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 2rem; }
+    section { padding: 6rem 0; }
+    section + section { border-top: 1px solid var(--border); }
+
+    /* ─── HERO ────────────────────────────────────────────── */
+    .hero {
+      padding: 7rem 0 5rem;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border: 1px solid rgba(110,231,183,0.25);
+      border-radius: 100px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      background: rgba(110,231,183,0.06);
+      margin-bottom: 2rem;
+    }
+    .hero-badge::before { content: '⚡'; }
+
+    h1 {
+      font-size: clamp(3rem, 8vw, 5.5rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      color: #fff;
+      margin-bottom: 1.5rem;
+    }
+    h1 .accent { color: var(--accent); }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.6;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 4rem;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--accent);
+      color: #050a0e;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); background: rgba(110,231,183,0.06); }
+
+    /* install terminal */
+    .install-preview {
+      display: inline-block;
+      background: var(--code-bg);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.75rem;
+      text-align: left;
+      max-width: 600px;
+      width: 100%;
+    }
+    .install-preview-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 1rem;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #28c840; }
+
+    .install-line {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.8;
+      color: var(--muted);
+    }
+    .install-line .prompt { color: var(--accent); margin-right: 8px; }
+    .install-line .cmd { color: var(--text); }
+    .install-line .comment { color: #3d4f5e; }
+    .install-line.output { color: #3d7a5e; padding-left: 1.4rem; }
+
+    /* ─── SECTION HEADERS ─────────────────────────────────── */
+    .section-header { text-align: center; margin-bottom: 3.5rem; }
+    .section-label {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+    h2 {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #fff;
+      margin-bottom: 0.75rem;
+    }
+    .section-sub { color: var(--muted); max-width: 520px; margin: 0 auto; }
+
+    /* ─── AGENTS ──────────────────────────────────────────── */
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .agent-card {
+      background: var(--surface);
+      padding: 1.5rem;
+      transition: background 0.15s;
+    }
+    .agent-card:hover { background: var(--surface2); }
+
+    .agent-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+      margin-bottom: 0.75rem;
+      color: var(--accent);
+      font-family: var(--font-mono);
+    }
+    .agent-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 0.35rem;
+      font-family: var(--font-mono);
+    }
+    .agent-role { font-size: 0.875rem; color: var(--muted); line-height: 1.5; }
+
+    /* ─── HOW IT WORKS ────────────────────────────────────── */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem; }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+    }
+    .step h3 { font-size: 1.1rem; font-weight: 600; color: #fff; }
+    .step p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+    .step-code {
+      margin-top: 0.5rem;
+      background: var(--code-bg);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      padding: 0.6rem 0.9rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--accent);
+    }
+
+    /* ─── COMMANDS ────────────────────────────────────────── */
+    .commands-table {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .cmd-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      padding: 0.875rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      align-items: start;
+      transition: background 0.12s;
+    }
+    .cmd-row:last-child { border-bottom: none; }
+    .cmd-row:hover { background: var(--surface2); }
+    .cmd-row code {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--accent);
+      word-break: break-all;
+    }
+    .cmd-row span { font-size: 0.85rem; color: var(--muted); }
+
+    /* ─── FOOTER ──────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .footer-logo { font-family: var(--font-mono); font-size: 0.9rem; color: var(--accent); font-weight: 600; }
+    .footer-links { display: flex; gap: 1.5rem; }
+    .footer-links a { font-size: 0.85rem; color: var(--muted); transition: color 0.15s; }
+    .footer-links a:hover { color: var(--text); }
+    .built-with { font-size: 0.78rem; color: #3d4f5e; }
+    .built-with a { color: #3d4f5e; border-bottom: 1px solid transparent; transition: color 0.15s, border-color 0.15s; }
+    .built-with a:hover { color: var(--muted); border-color: var(--muted); }
+
+    /* ─── COPY TOAST ──────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--accent);
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ─── RESPONSIVE ──────────────────────────────────────── */
+    @media (max-width: 640px) {
+      nav { padding: 0 1rem; }
+      .container { padding: 0 1.25rem; }
+      footer { flex-direction: column; align-items: flex-start; }
+      .cmd-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── NAV ─────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo">⚡ attacca <span>/ Claude Code plugin</span></div>
+  <div class="nav-actions">
+    <a href={GITHUB_URL} target="_blank" rel="noopener" class="btn-ghost">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      Star on GitHub
+    </a>
+  </div>
+</nav>
+
+<!-- ─── HERO ─────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge">Claude Code Plugin</div>
+    <h1>Build without<br/><span class="accent">pause.</span></h1>
+    <p class="hero-sub">
+      Attacca is a Claude Code plugin that gives you a seven-agent team.
+      Manager plans the work, Engineer ships it, Security audits before every push.
+    </p>
+    <div class="cta-group">
+      <button class="btn-primary" onclick="copyInstall()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy install command
+      </button>
+      <a href={GITHUB_URL} target="_blank" rel="noopener" class="btn-secondary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        ★ Star on GitHub
+      </a>
+    </div>
+
+    <!-- terminal preview -->
+    <div class="install-preview">
+      <div class="install-preview-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+      </div>
+      <div class="install-line comment"># Add the Attacca marketplace</div>
+      <div class="install-line"><span class="prompt">›</span><span class="cmd">/plugin marketplace add adihebbalae/Attacca</span></div>
+      <div class="install-line output">✓ Marketplace "attacca" registered</div>
+      <div class="install-line">&nbsp;</div>
+      <div class="install-line comment"># Install the plugin</div>
+      <div class="install-line"><span class="prompt">›</span><span class="cmd">/plugin install attacca@attacca</span></div>
+      <div class="install-line output">✓ Plugin installed — 7 agents ready</div>
+      <div class="install-line">&nbsp;</div>
+      <div class="install-line comment"># Run the welcome wizard</div>
+      <div class="install-line"><span class="prompt">›</span><span class="cmd">/attacca:quickstart</span></div>
+      <div class="install-line output">⚡ Agents assembled. Give me the mission.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── AGENTS ────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">The team</div>
+      <h2>Seven agents. One mission.</h2>
+      <p class="section-sub">Each agent has a single, clearly scoped role. The Manager never writes code. Security sees only file paths — never commit messages. No crossover, no bias.</p>
+    </div>
+    <div class="agents-grid">
+      {agents.map(a => (
+        <div class="agent-card">
+          <div class="agent-icon">{a.icon}</div>
+          <div class="agent-name">{a.name}</div>
+          <div class="agent-role">{a.role}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ──────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Workflow</div>
+      <h2>Zero ceremony. All signal.</h2>
+      <p class="section-sub">Three paths to a running project — pick the one that fits where you are.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01 / HAVE A SPEC</div>
+        <h3>Drop your PRD, let Attacca read it</h3>
+        <p>Put your project spec in the root as <code style="font-family:monospace;color:var(--accent)">PRD.md</code>. One command extracts the stack, mode, and tasks — no questions asked.</p>
+        <div class="step-code">/attacca:initprd</div>
+      </div>
+      <div class="step">
+        <div class="step-num">02 / STARTING FRESH</div>
+        <h3>Answer five questions, get a workspace</h3>
+        <p>Name, stack, description, first task, and mode. The Manager writes the full <code style="font-family:monospace;color:var(--accent)">.agents/</code> state structure and is ready to delegate.</p>
+        <div class="step-code">/attacca:init-project</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03 / NOT SURE</div>
+        <h3>Run quickstart — it'll figure it out</h3>
+        <p>Detects if the project is already set up, routes you to the right path, and explains how everything works if you're just exploring.</p>
+        <div class="step-code">/attacca:quickstart</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── QUALITY GATES ─────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Built-in discipline</div>
+      <h2>Quality gates, not checklists.</h2>
+      <p class="section-sub">Security runs in isolation before every push. Engineer self-validates: writes tests, runs them, fixes until green — before reporting back.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">ENGINEER</div>
+        <h3>Write → Test → Fix → Repeat</h3>
+        <p>The Engineer never reports back with broken state. Tests must be green. Build must pass. If a test fails, it fixes it — not you.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">SECURITY</div>
+        <h3>OWASP Top 10 before every push</h3>
+        <p>The Security agent sees only file paths — never commit messages or implementation rationale. Adversarial by design. No context bias.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">MANAGER</div>
+        <h3>Break conditions built in</h3>
+        <p>Engineer fails 3× on the same task? Stop and escalate. CRITICAL security finding? Halt everything. The Manager enforces this automatically.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── COMMANDS ──────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Commands</div>
+      <h2>All the tools, none of the noise.</h2>
+    </div>
+    <div class="commands-table">
+      {commands.map(c => (
+        <div class="cmd-row">
+          <code>{c.cmd}</code>
+          <span>{c.desc}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ────────────────────────────────────────────── -->
+<footer>
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;width:100%;">
+    <div class="footer-logo">⚡ attacca</div>
+    <div class="footer-links">
+      <a href={GITHUB_URL} target="_blank" rel="noopener">GitHub</a>
+      <a href={`${GITHUB_URL}/blob/main/claude-plugin/README.md`} target="_blank" rel="noopener">Docs</a>
+      <a href={`${GITHUB_URL}/blob/main/CHANGELOG.md`} target="_blank" rel="noopener">Changelog</a>
+    </div>
+    <p class="built-with">Built with <a href="https://github.com/adihebbalae/Attacca" target="_blank" rel="noopener">Attacca</a></p>
+  </div>
+</footer>
+
+<!-- ─── TOAST ─────────────────────────────────────────────── -->
+<div id="toast">Copied to clipboard</div>
+
+<script>
+  function copyInstall() {
+    const cmd = [
+      '/plugin marketplace add adihebbalae/Attacca',
+      '/plugin install attacca@attacca',
+      '/attacca:quickstart'
+    ].join('\n');
+
+    navigator.clipboard.writeText(cmd).then(() => {
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    });
+  }
+</script>
+
+</body>
+</html>

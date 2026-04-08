@@ -1,0 +1,25 @@
+{
+  "name": "attacca",
+  "owner": {
+    "name": "adihebbalae"
+  },
+  "metadata": {
+    "description": "Multi-agent AI coding orchestrator. Manager coordinates, Engineer builds, Security audits. Install once, works across all your Claude Code projects.",
+    "version": "3.0.0"
+  },
+  "plugins": [
+    {
+      "name": "attacca",
+      "source": "./claude-plugin",
+      "description": "Multi-agent AI coding orchestrator — Manager, Engineer, Security, Designer, Researcher, Consultant, Medic.",
+      "version": "3.0.0",
+      "author": {
+        "name": "adihebbalae"
+      },
+      "homepage": "https://github.com/adihebbalae/Attacca",
+      "repository": "https://github.com/adihebbalae/Attacca",
+      "license": "MIT",
+      "keywords": ["agent", "workflow", "tdd", "security", "multi-agent", "manager", "engineer", "orchestrator"]
+    }
+  ]
+}
