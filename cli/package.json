@@ -1,6 +1,6 @@
 {
   "name": "create-attacca",
-  "version": "3.0.0",
+  "version": "3.4.0",
   "description": "Scaffold a multi-agent AI coding workflow for any IDE — Copilot, Cursor, Cline, Windsurf, Claude Code, Antigravity, and more. Powered by Attacca.",
   "type": "module",
   "bin": {
