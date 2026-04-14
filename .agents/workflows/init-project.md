@@ -1,3 +1,7 @@
+---
+description: "Initialize the agent workspace from a PRD, file, or idea. Creates .agents/ structure, task list, and workspace-map. Run once when starting a new project."
+---
+
 # Init Project
 
 Initialize a new project from a PRD, file, or idea.

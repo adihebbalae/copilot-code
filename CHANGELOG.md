@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-04-14
+
+### Added
+- **`ANTIGRAVITY.md`** — Root-level manager instructions for Google Antigravity IDE, consistent with `CLAUDE.md`, `GEMINI.md`, and `AGENTS.md`. Documents the Antigravity-specific file layout and lists all available workflows.
+- **`.agents/workflows/quickstart.md`** — First-time setup wizard workflow. Prints welcome banner, detects existing `.agents/state.json`, and routes to `/init-project` or continues from last state.
+- **`.agents/workflows/handoff-to-consultant.md`** — Escalation workflow for deep architectural reasoning after 3 Engineer failures or irreversible decisions.
+- **`.agents/workflows/handoff-to-designer.md`** — UI/UX delegation workflow with design brief format.
+- **`.agents/workflows/handoff-to-researcher.md`** — Research delegation workflow with deliverable format for competitive/market analysis.
+- **`.agents/workflows/quality-gate.md`** — Pre-push quality gate workflow (lint → type-check → tests → security scan). Wraps the skill as a directly invocable `/quality-gate` slash command.
+- **`.agents/skills/`** — Antigravity-native skills directory with 4 core engineering skills: `code-review`, `quality-gate`, `security-audit`, `tdd`. Same `SKILL.md` frontmatter format as `.github/skills/` but placed where Antigravity IDE auto-discovers them.
+
+### Changed
+- **`.agents/workflows/init-project.md`**, **`handoff-to-engineer.md`**, **`handoff-to-security.md`** — Added `description` YAML frontmatter (max 250 chars) for Antigravity's workflow description field.
+
+### Why
+Google Antigravity is Google's next-gen local IDE (successor to Firebase Studio, announced March 2026, released to GA April 2026). It uses `.agents/workflows/` for slash-command workflows, `.agents/rules/` for workspace rules, and `.agents/skills/` for auto-loaded skills — all within the `.agents/` directory already used by this boilerplate. The partial Antigravity support added in v3.0.0 was missing the `description` frontmatter on workflows, 4 of the 7 handoff workflows, and the skills directory. This release completes parity.
+
 ## [3.3.0] - 2026-04-08
 
 ### Added

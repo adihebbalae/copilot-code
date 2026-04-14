@@ -1,3 +1,7 @@
+---
+description: "Hand off the current task to the Engineer agent. Writes a structured brief to .agents/handoff.md and launches the Engineer via task group."
+---
+
 # Handoff to Engineer
 
 Hand off the current task to the Engineer agent.

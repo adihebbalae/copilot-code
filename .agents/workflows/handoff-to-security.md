@@ -1,3 +1,7 @@
+---
+description: "Hand off changed files for adversarial security audit. Passes ONLY file paths to avoid bias. Halts all tasks on CRITICAL findings."
+---
+
 # Handoff to Security
 
 Hand off files for adversarial security audit.

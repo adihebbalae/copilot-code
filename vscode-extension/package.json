@@ -67,7 +67,8 @@
         {
           "type": "webview",
           "id": "attacca.agentPanel",
-          "name": "Dashboard"
+          "name": "Dashboard",
+          "icon": "media/icon.svg"
         }
       ]
     },
