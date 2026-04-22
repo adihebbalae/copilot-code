@@ -3,8 +3,8 @@ import * as https from 'node:https';
 import { ScaffoldConfig } from './types';
 
 const REPO = 'adihebbalae/Attacca';
-const VERSION_URL = `https://raw.githubusercontent.com/${REPO}/main/.github/BOILERPLATE_VERSION`;
-const CHANGELOG_URL = `https://raw.githubusercontent.com/${REPO}/main/CHANGELOG.md`;
+const VERSION_URL = `https://raw.githubusercontent.com/${REPO}/master/.github/BOILERPLATE_VERSION`;
+const CHANGELOG_URL = `https://raw.githubusercontent.com/${REPO}/master/CHANGELOG.md`;
 
 export async function checkForUpdates(extensionVersion: string): Promise<void> {
   const folders = vscode.workspace.workspaceFolders;
