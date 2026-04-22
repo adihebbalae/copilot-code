@@ -1,0 +1,14 @@
+{
+  "title": "Update Workspace Map on Commit",
+  "description": "After a git commit, remind the agent to update .agents/workspace-map.md if any files were created, moved, or deleted.",
+  "trigger": {
+    "type": "PostToolUse",
+    "toolName": ["run_command"]
+  },
+  "action": {
+    "type": "agentPrompt",
+    "prompt": "Check if the last command was a `git commit`. If it was:\n\n1. Run `git show --stat HEAD` to see which files changed\n2. If any files were CREATED (new file) or DELETED or RENAMED, update `.agents/workspace-map.md` to reflect the changes\n3. Add new files with a one-line description of their purpose\n4. Remove deleted files from the map\n5. Update paths for renamed/moved files\n\nIf the last command was NOT a git commit, do nothing and stay silent.\n\nDo not update the map for pure modifications to existing files — only for structural changes (new files, deletions, renames).",
+    "timeout": 30
+  },
+  "enabled": false
+}

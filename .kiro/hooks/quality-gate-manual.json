@@ -1,0 +1,13 @@
+{
+  "title": "Quality Gate (Manual)",
+  "description": "Manually trigger the full quality gate: lint, type-check, tests, and security scan. Run this before pushing to the repository.",
+  "trigger": {
+    "type": "ManualTrigger"
+  },
+  "action": {
+    "type": "agentPrompt",
+    "prompt": "Run the full quality gate for this project. Execute all stages in order and stop at the first failure:\n\n**Stage 1: Lint**\n- If Node.js: `npx eslint . --ext .ts,.tsx,.js,.jsx --max-warnings 0`\n- If Python: `ruff check .`\n- Report: PASS or FAIL with error summary\n\n**Stage 2: Type-Check**\n- If TypeScript: `npx tsc --noEmit`\n- If Python: `mypy . --ignore-missing-imports`\n- Report: PASS or FAIL with error summary\n\n**Stage 3: Tests**\n- Detect test runner: check for vitest.config.*, jest.config.*, pytest.ini, pyproject.toml\n- Run tests with `npx vitest run` or `npx jest --ci` or `pytest -q`\n- Report: PASS (X tests) or FAIL (X failing tests)\n\n**Stage 4: Security**\n- Run `npm audit --audit-level=high` (Node.js) or `pip-audit` (Python)\n- Check `git diff --name-only HEAD` for any files with obvious secrets\n- Report: PASS or FAIL (list any HIGH/CRITICAL findings)\n\n**Final Verdict**\nOutput a clear summary:\n```\n✅ GATE PASSED — Safe to push\n  Stage 1 (Lint): PASS\n  Stage 2 (Type-Check): PASS\n  Stage 3 (Tests): PASS\n  Stage 4 (Security): PASS\n```\nor:\n```\n❌ GATE FAILED — Do NOT push\n  Stage 1 (Lint): [PASS/FAIL]\n  Stage 2 (Type-Check): [PASS/FAIL]\n  ...\n```",
+    "timeout": 120
+  },
+  "enabled": true
+}

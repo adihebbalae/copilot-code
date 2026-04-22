@@ -1,0 +1,13 @@
+{
+  "title": "Security Scan on Agent Stop",
+  "description": "After the agent finishes a task, scan changed files for hardcoded secrets, credentials, and obvious security issues.",
+  "trigger": {
+    "type": "AgentStop"
+  },
+  "action": {
+    "type": "agentPrompt",
+    "prompt": "A coding task just completed. Perform a quick security check on any files changed in this session:\n\n1. Run: `git diff --name-only HEAD` to identify changed files\n2. For each changed file, check for:\n   - Hardcoded API keys, tokens, passwords, or secrets (regex: `(?i)(api_key|secret|password|token|private_key)\\s*=\\s*['\"][^'\"]{8,}`)\n   - Credentials committed to source (any string that looks like a secret value)\n   - CORS set to `*` on new endpoints\n   - New `eval()`, `exec()`, or `shell=True` usage\n   - SQL queries built with string concatenation\n3. If any issues are found, report them with file:line and severity (CRITICAL/HIGH/MEDIUM)\n4. If no issues found, output: `Security check: CLEAN`\n\nThis is a lightweight fast check — not a full audit. Flag anything suspicious for human review.",
+    "timeout": 60
+  },
+  "enabled": true
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Lint on Write",
+  "description": "Run linter automatically after any file write or edit to catch issues immediately.",
+  "trigger": {
+    "type": "PostToolUse",
+    "toolName": ["str_replace_editor", "write_file", "create_file"]
+  },
+  "action": {
+    "type": "shellCommand",
+    "command": "if [ -f package.json ]; then npx eslint --ext .ts,.tsx,.js,.jsx --max-warnings 0 $(git diff --name-only HEAD 2>/dev/null | grep -E '\\.(ts|tsx|js|jsx)$' | tr '\\n' ' ') 2>&1 | tail -20; elif [ -f pyproject.toml ] || [ -f setup.py ]; then ruff check $(git diff --name-only HEAD 2>/dev/null | grep -E '\\.py$' | tr '\\n' ' ') 2>&1 | tail -20; fi",
+    "timeout": 30
+  },
+  "enabled": true
+}
