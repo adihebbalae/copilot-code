@@ -123,3 +123,72 @@ Want me to do that now?
 ```
 
 If yes, write the TASK-001 handoff to `.agents/handoff.md` based on what the user described.
+
+## Phase 4: Pre-First-Commit Cleanup
+
+**Before the project's first `git commit`**, the Manager MUST run this checklist. These files exist in the template but must NOT ship in the project repo — they contain proprietary orchestration details, build patterns, and internal instructions.
+
+### Step 1 — Activate the project .gitignore
+
+```bash
+# The boilerplate ships with .gitignore.project for exactly this reason.
+# Rename it to replace the template's permissive .gitignore:
+mv .gitignore.project .gitignore
+```
+
+> Why: The template `.gitignore` is intentionally permissive so the boilerplate repo can commit everything. The project `.gitignore` excludes all orchestration files. Without this rename, agent files, internal docs, and distribution packages will be committed to the project repo.
+
+### Step 2 — Replace the README
+
+Delete or replace `README.md`. The boilerplate README documents Attacca — not your product. Create a project-specific README:
+
+```markdown
+# [Project Name]
+
+[One-sentence description]
+
+## Getting Started
+...
+
+## Tech Stack
+...
+```
+
+> Why: Publishing the Attacca README under your project makes it look like your product is an AI boilerplate, and leaks the internal toolchain you're using.
+
+### Step 3 — Reset CHANGELOG.md
+
+The existing `CHANGELOG.md` is Attacca's own release history. Either:
+- Delete it and create a fresh one starting at `v0.1.0`, or
+- Leave it empty for now
+
+> Why: Attacca's internal changelogs (caveman skill additions, designer agent updates, etc.) have nothing to do with your product's history.
+
+### Step 4 — Verify nothing sensitive will be committed
+
+```bash
+git status
+git diff --cached --name-only   # if you've already staged
+```
+
+Confirm none of these appear in the commit:
+- `.github/agents/` — agent definitions with your build patterns
+- `.github/skills/` — internal skills
+- `.github/copilot-instructions.md` — your full orchestration protocol
+- `.claude/`, `.gemini/` — IDE adapter files
+- `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` — agent entry points
+- `DESIGN.md`, `ANTIGRAVITY.md`, `HOW_TO_UPDATE.md`, `RETROFIT.md` — boilerplate docs
+- `cli/`, `vscode-extension/`, `website/`, `claude-plugin/` — distribution packages
+
+If any appear, the `.gitignore` rename in Step 1 may not have taken effect. Run:
+```bash
+git rm --cached -r .github/agents .github/skills .claude .gemini CLAUDE.md AGENTS.md GEMINI.md 2>/dev/null || true
+```
+
+### Step 5 — First commit
+
+```bash
+git add .
+git commit -m "chore: initial project scaffold"
+git push origin main
+```

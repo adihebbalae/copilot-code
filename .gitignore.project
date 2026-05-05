@@ -29,6 +29,27 @@ CLAUDE.md
 AGENTS.md
 GEMINI.md
 
+# Boilerplate meta files (internal docs, not project code)
+# These document the boilerplate itself — not your product.
+# They contain proprietary build patterns, agent workflows, and implementation details.
+DESIGN.md
+ANTIGRAVITY.md
+HOW_TO_UPDATE.md
+RETROFIT.md
+
+# Boilerplate distribution packages
+# The CLI, VS Code extension, and website are the boilerplate's own products.
+# They are not part of your project and should not be in its repo.
+cli/
+vscode-extension/
+website/
+claude-plugin/
+
+# Boilerplate changelog (replace with your own)
+# After init, create your own CHANGELOG.md — don't ship the boilerplate's history.
+# Uncomment if you don't want any changelog:
+# CHANGELOG.md
+
 # =========================
 # Standard Ignores
 # =========================

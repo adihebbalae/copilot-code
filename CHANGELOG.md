@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.1] - 2026-05-05
+
+### Added
+- **`.gitignore.project`** — Added `DESIGN.md`, `ANTIGRAVITY.md`, `HOW_TO_UPDATE.md`, `RETROFIT.md`, `cli/`, `vscode-extension/`, `website/`, `claude-plugin/` to the project gitignore. These are boilerplate-internal files and must never ship in a project repo.
+- **`claude-plugin/commands/init-project.md`** — New Phase 4: Pre-First-Commit Cleanup. Five explicit steps: activate project gitignore, replace README, reset CHANGELOG, verify `git status`, then first commit. Includes `git rm --cached` recovery command for already-tracked files.
+- **`.github/agents/manager.agent.md`** — Section 7a: First Commit Checklist. Mandatory pre-push protocol for new projects with a full reference table of every file category that must stay out of the project repo, and the reason why.
+
+### Why
+When a new project is cloned from the template and scaffolded, the Manager had no explicit instruction to clean up before the first commit. Agent definitions, internal skills, IDE adapters, boilerplate docs, and distribution packages would all get committed to the project repo — exposing proprietary orchestration details and cluttering the codebase with files that have nothing to do with the product.
+
 ## [3.7.0] - 2026-05-05
 
 ### Added

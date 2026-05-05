@@ -109,7 +109,53 @@ When receiving a new PRD:
 6. Create initial `.agents/workspace-map.md`
 7. **Complex projects (3+ distinct modules)**: Generate `.agents/MODULES.md` with module breakdown, dependencies, and initial statuses — see Section 12. Complex Project Mode activates automatically when this file exists.
 
-### 8. Researcher Routing Rules
+### 7a. First Commit Checklist (MANDATORY before any `git push` on a new project)
+
+This runs once — before the project's first commit. The boilerplate template ships with internal orchestration files, build patterns, and proprietary implementation details that **must never appear in the project repository**.
+
+**Think of it like this**: the files in `.github/agents/`, `.claude/`, `CLAUDE.md`, etc. are the equivalent of the CEO's internal email to VPs — internal strategy, never for public consumption.
+
+#### Before committing, verify these are excluded from the repo:
+
+| Category | Files / Folders | Why |
+|----------|----------------|-----|
+| Agent definitions | `.github/agents/`, `.github/skills/`, `.github/prompts/`, `.github/copilot-instructions.md` | Contains the full orchestration protocol and internal build patterns |
+| IDE adapters | `.claude/`, `.gemini/`, `.cursor/`, `.clinerules`, `.windsurfrules` | IDE-specific wiring — not project code |
+| Agent entry points | `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` | Expose which AI tools and agents are running internally |
+| Boilerplate docs | `DESIGN.md`, `ANTIGRAVITY.md`, `HOW_TO_UPDATE.md`, `RETROFIT.md` | Internal design philosophy and upgrade procedures |
+| Distribution packages | `cli/`, `vscode-extension/`, `website/`, `claude-plugin/` | These are Attacca's own products, not yours |
+| Agent state | `.agents/` | Session-specific state; not source code |
+
+#### Steps:
+
+1. **Rename `.gitignore.project` → `.gitignore`** — this is the project-safe ignore file:
+   ```bash
+   mv .gitignore.project .gitignore
+   ```
+
+2. **Replace `README.md`** with a project-specific README. The boilerplate README documents Attacca — not your product. A placeholder is fine:
+   ```markdown
+   # [Project Name]
+   [Description]
+   ```
+
+3. **Reset `CHANGELOG.md`** — the existing one is Attacca's release history. Delete and recreate from `v0.1.0`, or delete it entirely.
+
+4. **Verify `git status`** shows none of the files in the table above as staged or tracked.
+
+5. **First commit**:
+   ```bash
+   git add .
+   git commit -m "chore: initial project scaffold"
+   git push origin main
+   ```
+
+> If the `.gitignore` rename doesn't immediately exclude already-tracked files, force-remove them from the index:
+> ```bash
+> git rm --cached -r .github/agents .github/skills .claude .gemini CLAUDE.md AGENTS.md GEMINI.md 2>/dev/null || true
+> ```
+
+
 
 Before building any new feature or entering a new market/product area, consider whether the Researcher should gather intelligence first. Route to Researcher when:
 
