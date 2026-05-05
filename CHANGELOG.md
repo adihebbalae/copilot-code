@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.0] - 2026-05-05
+
+### Added
+- **`.github/skills/caveman/SKILL.md`** — Token compression skill. Three levels: `lite` (~30% output reduction), `full` (~65%), `ultra` (~75%). Activates when context window is filling up, on long-running sessions, or when Manager sets `compression: <level>` in the handoff. Also covers `caveman-compress` (input filtering: skip redundant comments, collapse repeated patterns, read state files structurally). State file compression guidance included: targets `state.md` ≤40 lines, `handoff.md` ≤25 lines.
+- **`.github/agents/designer.agent.md`** — Added **Design Tools** section covering:
+  - **Impeccable** (`pbakaus/impeccable`, 25.2k ⭐): 23 design commands (`/impeccable audit`, `/impeccable polish`, `/impeccable critique`, etc.), 7 domain reference files, 27 deterministic anti-pattern rules. Designer now knows when and how to surface it to users.
+  - **design-extract / designlang** (`Manavarya09/design-extract`, 2.2k ⭐): Extracts complete design system from any live URL — DTCG tokens, Tailwind config, shadcn theme, component anatomy, brand voice. Designer recommends it when user provides a reference site.
+- **`README.md`** — `caveman` added to Skills table. New **Companion Tools** table documenting impeccable, designlang, and codeburn as per-project installs.
+
+### Why
+Three gaps in the designer agent and token economy: (1) No design vocabulary — designer had no concrete anti-slop rules or commands to offer; impeccable fills this. (2) No way to extract reference design systems — designer had to guess from screenshots; designlang solves this with one CLI command. (3) No token budget management — long sessions degrade context quality; the caveman skill gives agents a structured way to compress output before the window fills.
+
 ## [3.6.1] - 2026-04-22
 
 ### Changed

@@ -253,16 +253,24 @@ Use when you just want the end result, not step-by-step narration of the work.
 |-------|----------|
 | `code-review` | On-demand code review checklist |
 | `security-audit` | OWASP Top 10 security audit checklist |
-
----
-*Built with [Attacca](https://github.com/adihebbalae/Attacca)*
 | `tdd` | TDD workflow enforcing RED → GREEN → REFACTOR |
 | `quality-gate` | Pre-push gate: lint + type-check + test + security scan |
+| `caveman` | Token compression (65–75% output reduction). Three levels: lite / full / ultra. Activate when context window is filling up or on long sessions. |
 | `update-workspace-map` | Auto-regenerate `.agents/workspace-map.md` post-commit |
 | `supply-chain` | Standalone 4-gate supply chain security (submittable to [awesome-copilot](https://github.com/github/awesome-copilot)) |
 | `sbom` | Native SBOM generation via syft/cdxgen + CVE scan via osv-scanner |
 | `product-research` | Research frameworks: ICP analysis, competitive landscape, TAM/SAM/SOM, JTBD, positioning gaps, GTM patterns |
 | `incident-response` | Emergency runbooks: triage, diagnosis, rollback vs patch, incident logs, postmortems |
+
+### Companion Tools
+
+These tools work alongside Attacca but are not bundled — install them per-project when relevant.
+
+| Tool | Install | Use when |
+|------|---------|----------|
+| **[impeccable](https://github.com/pbakaus/impeccable)** | `cp -r dist/claude-code/.claude your-project/` | Any frontend project. 23 design commands (`/impeccable audit`, `/impeccable polish`, etc.), 27 anti-slop rules, 7 domain reference files. Pairs with the Designer agent. |
+| **[designlang](https://github.com/Manavarya09/design-extract)** | `npx designlang <url>` | User says "make it look like X". Extracts full design system from any live URL — DTCG tokens, Tailwind theme, component anatomy, brand voice. Feed output to Designer agent. |
+| **[codeburn](https://github.com/getagentseal/codeburn)** | `npm install -g codeburn` | Cost observability. Tracks token spend across 18 AI tools (Claude Code, Codex, Cursor, Copilot, Gemini CLI…). `codeburn optimize` flags waste in your `~/.claude/` setup. |
 
 ## Supply Chain Security
 
@@ -353,3 +361,6 @@ The Manager will add project-specific MCPs, skills, and instructions based on yo
 - Context7 MCP — auto-configured by `/init-project` based on your stack
 - GitHub CLI (`gh`) — required for GitHub Issues task backlog
 - `syft` or `cdxgen` — required for SBOM generation (installed automatically by `sbom` skill if missing)
+
+---
+*Built with [Attacca](https://github.com/adihebbalae/Attacca)*

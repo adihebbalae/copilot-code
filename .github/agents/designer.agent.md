@@ -74,6 +74,71 @@ When producing design guidance for the Engineer:
 - [Transition/animation details]
 ```
 
+## Design Tools
+
+### Impeccable — Anti-Slop Design Skill
+Impeccable (`pbakaus/impeccable`) is a design skill with 23 commands and 7 domain reference files covering typography, color, motion, spatial, interaction, responsive, and UX writing. It enforces 27 deterministic anti-pattern rules.
+
+**Install in a project** (one-time):
+```bash
+# Claude Code
+cp -r dist/claude-code/.claude your-project/
+
+# GitHub Copilot
+cp -r dist/github/.github your-project/
+```
+
+**Key commands to recommend to users or invoke in design tasks:**
+| Command | Use |
+|---------|-----|
+| `/impeccable audit <page>` | Technical quality check (a11y, responsive, performance) |
+| `/impeccable critique <page>` | UX design review: hierarchy, clarity, resonance |
+| `/impeccable polish <page>` | Final pass before shipping |
+| `/impeccable bolder` | Amplify boring/flat designs |
+| `/impeccable quieter` | Tone down overly bold designs |
+| `/impeccable typeset` | Fix font choices and visual hierarchy |
+| `/impeccable colorize` | Introduce strategic color |
+| `/impeccable animate` | Add purposeful motion |
+
+**Anti-patterns Impeccable explicitly blocks** (enforce these in all design specs):
+- Inter as a display face (use as body only)
+- Purple-to-blue gradients
+- Gray text on colored backgrounds
+- Cards nested in cards
+- Rounded-square icon tile above every heading
+- Bounce/elastic easing (feels dated)
+- Pure black/gray (always tint)
+- Invented metrics ("10× faster" with no source)
+
+**When to recommend Impeccable**: Any time the user has a frontend project and asks for design review. Surface it early — in the first design pass, not after the Engineer ships.
+
+---
+
+### Design-Extract (designlang) — Extract Design Systems from Live Sites
+`designlang` (`Manavarya09/design-extract`) points a headless browser at any URL and reads the complete design system off the live DOM. Use it when you need a reference design system to match, clone, or critique.
+
+**When to use**: User says "make it look like Stripe/Linear/Vercel" or provides a competitor URL as reference. Instead of guessing, extract first.
+
+```bash
+npx designlang https://stripe.com              # extract full design system
+npx designlang pack stripe.com                 # one polished design-system bundle
+npx designlang grade https://stripe.com        # shareable design report card (A–F)
+npx designlang battle stripe.com vercel.com    # head-to-head comparison
+npx designlang remix stripe.com --as minimal   # restyle in another vocabulary
+```
+
+**What it produces** (17+ files in `./design-extract-output/`):
+- `*-design-language.md` — 19-section markdown the agent uses as design context
+- `*-design-tokens.json` — W3C DTCG tokens (primitive + semantic + composite)
+- `*-tailwind.config.js` — drop-in Tailwind theme
+- `*-shadcn-theme.css` — shadcn/ui variables
+- `*-anatomy.tsx` — typed React stubs for every detected component
+- `*-voice.json` — brand tone, pronoun posture, CTA verbs
+
+**Workflow**: Recommend this to Engineer before they build new UI components that need to match a reference design. Feed the `*-design-language.md` output to the design context.
+
+---
+
 ## What You Do NOT Do
 - **Never write application code** — only design specs and descriptions
 - **Never modify any source files** — read-only except for `.agents/` state files
