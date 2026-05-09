@@ -55,7 +55,10 @@ When work needs to transfer between agents:
 ## Code Standards
 - Write clean, readable code with meaningful names
 - Handle errors at system boundaries (user input, API calls, external data)
-- Never commit secrets, API keys, or credentials
+- Never commit secrets, API keys, credentials, or local user overrides
+- **Template files (COMMIT)**: `.claude/`, `.gemini/`, `.claude-plugin/` agent definitions and configs
+- **Local overrides (NEVER COMMIT)**: `.claude/settings.local.json`, `.vscode/settings.json`, `vscode-extension/out/`, `.vsix` files
+- **Maintainer artifacts (NEVER COMMIT)**: `vscode-extension/`, `cli/`, `website/` source (built and released separately, not part of boilerplate)
 - Run tests before declaring work complete
 - Run the `quality-gate` skill before every push (lint → type-check → tests → security scan). Do not push with any stage failing.
 

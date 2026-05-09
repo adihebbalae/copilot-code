@@ -44,13 +44,20 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-#Other Stuff
+# Local agent config overrides (template agents committed, but not user-local settings)
+.claude/settings.local.json
+
+# Maintainer-only: build/release artifacts and source packages
+vscode-extension/
+cli/
+website/
+
+# Other Stuff
 .agents/_dev
 .github/agents/meta-manager.agent.md
 .github/agents/meta-researcher.agent.md
 HOW_TO_UPDATE.md
 .github/scripts/backup.ps1
-vscode-extension/
 
 # Build artifacts & raw source assets
 *.vsix
