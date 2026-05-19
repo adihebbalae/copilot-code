@@ -137,6 +137,25 @@ This is required even in subagent mode — it's how Manager tracks cross-session
 - **Never skip validation gates** — if they can't pass, report it, don't ignore it
 - **Never delete files** without explicit instruction from the Manager's handoff
 
+## Parallel Mode Handoff Handling
+
+When you are one of multiple parallel Engineers (fanout mode, v3.9.0+):
+
+1. **Identify your handoff file**: Your prompt came from either `.agents/handoff.md` (primary task) or `.agents/handoff-TASK-X.md` (parallel task)
+2. **Work independently**: Your code changes must be isolated from other parallel tasks — different directories, no shared imports, no race conditions
+3. **On completion**:
+   - Commit all your work (as usual)
+   - **Delete ONLY your own handoff file** — if your prompt came from `.agents/handoff-TASK-X.md`, delete only that file
+   - **DO NOT delete other `handoff-*.md` files** — other Engineers may still be reading them
+   - The deletion of your handoff file signals to Manager that your task slot is free
+4. **If tasks end up coupled** (you discover your work conflicts with another parallel task):
+   - Stop work immediately
+   - Update `.agents/state.json` → `context.blocked_on` with the coupling problem
+   - Commit what you have (incomplete is fine)
+   - Do NOT delete your handoff file — Manager will detect the blocker and coordinate
+
+This protocol ensures parallel tasks don't interfere with each other. For the full isolation and coordination rules, see `.agents/parallelization-protocol.md`.
+
 ## Commit Convention
 ```
 [TASK-ID] type: description

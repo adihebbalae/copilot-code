@@ -53,6 +53,7 @@ cli/
 website/
 
 # Other Stuff
+.dev/
 .agents/_dev
 .github/agents/meta-manager.agent.md
 .github/agents/meta-researcher.agent.md

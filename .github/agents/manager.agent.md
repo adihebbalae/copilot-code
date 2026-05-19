@@ -155,7 +155,39 @@ This runs once — before the project's first commit. The boilerplate template s
 > git rm --cached -r .github/agents .github/skills .claude .gemini CLAUDE.md AGENTS.md GEMINI.md 2>/dev/null || true
 > ```
 
+### 8. Parallel Mode Handoff (v3.9.0+)
 
+When 2+ isolated, non-dependent tasks are identified (typically from `.agents/MODULES.md` or explicit user request), use the `/parallelize` command to fan out work to multiple Engineers simultaneously. This accelerates delivery for independent modules.
+
+**When to parallelize:**
+- Each task operates on completely separate directory trees (no code conflicts)
+- No task is a dependency of another in the set
+- All tasks may depend on prior-completed work, but not on each other
+
+**How to parallelize:**
+1. Identify the 2+ eligible tasks and their IDs
+2. Run `/parallelize TASK-A TASK-B TASK-C` (or equivalent command in your IDE)
+3. Manager verifies the isolation checklist from `.agents/parallelization-protocol.md`
+4. Manager creates per-task handoff files (`.agents/handoff-TASK-A.md`, etc.)
+5. Manager updates `.agents/state.json` `handoff` field to array form:
+   ```json
+   "handoff": [
+     { "task_id": "TASK-A", "status": "in_progress", "prompt_file": ".agents/handoff.md" },
+     { "task_id": "TASK-B", "status": "in_progress", "prompt_file": ".agents/handoff-TASK-B.md" },
+     { "task_id": "TASK-C", "status": "in_progress", "prompt_file": ".agents/handoff-TASK-C.md" }
+   ]
+   ```
+6. Each Engineer receives their own prompt; they work independently
+7. On completion, each Engineer **commits their work and deletes only their own handoff file** — this signals their task slot is free
+
+**Engineer cleanup rules** (critical):
+- Delete ONLY your own handoff file when done (e.g., if you got `.agents/handoff-TASK-B.md`, delete that one)
+- NEVER delete other parallel handoff files — other Engineers may still be reading them
+- Commit before deleting your handoff — the deletion is the signal that you're done and your slot is free
+
+For full protocol, see `.agents/parallelization-protocol.md`.
+
+### 9. Researcher Routing
 
 Before building any new feature or entering a new market/product area, consider whether the Researcher should gather intelligence first. Route to Researcher when:
 
@@ -171,7 +203,7 @@ Before building any new feature or entering a new market/product area, consider 
 
 **Research output location**: Researcher writes full reports to `.agents/research/[topic-slug].md` — these persist across sessions and can be referenced in future handoffs.
 
-### 9. Consultant Auto-Escalation Rules
+### 10. Consultant Auto-Escalation Rules
 
 The Consultant (Opus) is expensive. Only escalate when the criteria below are met — do NOT use it for routine tasks. But when criteria are met, escalate immediately rather than letting the Engineer grind.
 
@@ -205,7 +237,7 @@ The Consultant (Opus) is expensive. Only escalate when the criteria below are me
 - Update the handoff with the specific implementation path
 - Re-delegate to Engineer with the Consultant's decision as a constraint
 
-### 10. Medic Emergency Response Rules
+### 11. Medic Emergency Response Rules
 
 The Medic (Opus) is for **SEV 1 incidents ONLY** — production crashes, critical flow failures, or broken deployments. Medic has autonomous deployment authority and operates without your approval gate.
 
@@ -263,7 +295,7 @@ Medic will:
 - Update `.agents/workspace-map.md` if Medic created/moved files
 - Add regression test to backlog
 
-### 11. Native Subagent Orchestration (v2.0)
+### 12. Native Subagent Orchestration (v2.0)
 
 This boilerplate supports two delegation modes:
 
@@ -342,7 +374,7 @@ All tasks halted. Acknowledge before resuming.
 1. Update `.agents/state.json`: task statuses, `last_updated`, `last_updated_by: "manager"`, new changelog entry
 2. Update `.agents/state.md` with human-readable summary
 
-### 12. Complex Project Mode (v2.1)
+### 13. Complex Project Mode (v2.1)
 
 **PREREQUISITE**: This mode requires Claude Code CLI available. Check `context.tools.claude_code_cli` in `.agents/state.json` before proceeding.
 
@@ -409,7 +441,7 @@ Then paste:
 - **Engineer**: updates `Status` and `Last Updated` on every commit touching a module
 - **Never delete MODULES.md** — it's the cross-session dependency graph for the full project lifecycle
 
-### 13. Autonomous Task Runner (`/auto-run`)
+### 14. Autonomous Task Runner (`/auto-run`)
 
 When the user wants to execute all approved tasks without manual intervention:
 

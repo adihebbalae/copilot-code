@@ -49,8 +49,21 @@ When work needs to transfer between agents:
 - `.agents/state.md` — Human-readable dashboard
 - `.agents/workspace-map.md` — File/directory reference
 - `.agents/handoff.md` — Current handoff prompt
+- `.agents/handoff-TASK-*.md` — Parallel task handoff files (v3.9.0+)
 - `.agents/MODULES.md` — Module registry for complex projects (3+ modules); auto-created by `/init-project`
-- **No other state/summary files.** If it's not in these five files, it doesn't exist.
+- **No other state/summary files.** If it's not in these five files (+ parallel variants), it doesn't exist.
+
+### Parallel Mode (v3.9.0+)
+When Manager identifies 2+ isolated, non-dependent tasks, it uses `/parallelize` to fan out work to multiple agents simultaneously. **Only one agent** is primary (reads `.agents/handoff.md`); all others read their own `.agents/handoff-TASK-*.md` files.
+
+**Key rules for parallel mode**:
+- Each task must have **zero file overlap** with other parallel tasks
+- Tasks must have **zero task dependencies** within the parallel set
+- Isolation checklist from `.agents/parallelization-protocol.md` is verified before fan-out
+- Each Engineer **deletes only their own handoff file** when done — never touches other parallel files
+- Manager reverts `state.json` `handoff` field to single-object form when all parallel tasks complete
+
+For full protocol, see `.agents/parallelization-protocol.md`.
 
 ## Code Standards
 - Write clean, readable code with meaningful names
@@ -170,3 +183,42 @@ When the user asks to "push", "release", or "publish", **assume it's a multi-pla
 4. If no: stop and report
 
 **Why**: Users of the CLI and VS Code extension expect all three to stay in sync. Pushing to GitHub without updating npm/vscode feels incomplete.
+
+## Claude Code CLI Integration (Sonnet/Opus in VS Code)
+
+To access full Sonnet/Opus reasoning from within VS Code without GitHub Copilot's model restrictions:
+
+### Setup (already configured in this template)
+1. `npx @anthropic-ai/claude-code --help` — verify CLI is installed
+2. Use `.clinerules` — default model preferences (edit as needed)
+3. Use `.vscode/tasks.json` — pre-configured tasks for common workflows
+4. Use `.vscode/keybindings.json` — keyboard shortcuts to invoke tasks
+
+### Keybindings (from the IDE)
+- **Ctrl+Shift+Alt+R** — Sonnet code review (fast, selected text)
+- **Ctrl+Shift+Alt+O** — Opus architecture review (deep reasoning, full codebase)
+- **Ctrl+Shift+Alt+D** — Opus design decision help (complex tradeoffs, selected text)
+
+Output appears in VS Code's integrated terminal.
+
+### From the terminal (direct use)
+```bash
+# Sonnet (default, fast)
+npx @anthropic-ai/claude-code --print "Your prompt here"
+
+# Opus (expensive but best reasoning)
+npx @anthropic-ai/claude-code --print --model opus "Your prompt here"
+
+# Specific agent
+npx @anthropic-ai/claude-code --print --agent consultant "Architectural question"
+
+# Continue a session
+npx @anthropic-ai/claude-code --continue
+```
+
+### Model routing guideline
+- **Haiku** (GitHub Copilot default) — fast execution, known patterns
+- **Sonnet** (Claude Code default) — balanced speed/reasoning for most work
+- **Opus** (Claude Code, keybinding Alt+O) — ambiguous design problems, high-stakes decisions
+
+Use Opus judiciously; it's 2-3x more expensive than Sonnet but dramatically better at reasoning through architectural ambiguity.

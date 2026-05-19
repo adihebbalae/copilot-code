@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.9.0] - 2026-05-19
+
+### Added
+- **`.agents/parallelization-protocol.md`** — Generic parallelization protocol for fanout of 2+ independent tasks to multiple Engineers. Covers task isolation, handoff naming convention, cleanup responsibility, state coordination, and dependency rules. Replaces project-specific patterns (originally from TutorOS) with a boilerplate-wide standard.
+- **`.github/prompts/parallelize.prompt.md`** — `/parallelize` slash command for Copilot. Validates isolation checklist, creates per-task handoff files, updates state.json to array form, and shows user how to dispatch on their platform (Claude Code auto-spawns; other IDEs require manual session opens).
+
+### Changed
+- **`.agents/state.json`** — `handoff` field now supports two forms: single object (default, single-task mode) or array (parallel mode). Added `_schema_notes` field documenting both forms. See `.agents/parallelization-protocol.md`.
+- **Manager protocol (8 mode files)** — Added "Parallel Mode" subsection to: `CLAUDE.md`, `.github/agents/manager.agent.md` (Section 8, renumbered remaining sections 9→14), `.github/copilot-instructions.md`, `.cursor/rules/manager.mdc`, `.clinerules/manager.md`, `.windsurfrules`, `AGENTS.md`, `GEMINI.md`, `.agents/rules/manager.md`. Each section includes isolation checklist reference and fan-out instructions (modal per IDE/CLI).
+- **Engineer protocol** — Added "Parallel Mode Handoff Handling" section to `.github/agents/engineer.agent.md` and mirrors, specifying cleanup contract (delete only own handoff file, never touch other parallel files, commit before deletion).
+- **`.gitignore`** — Added `.dev/` to template's ignore list. `.dev/` is for project-specific scratch (Copilot memory exports, design drafts). Never committed to boilerplate or downstream projects.
+
+### Why
+First external request on Attacca (Luca King, 2026-05-18) asked how Attacca scales code review when multiple agent runs are in flight. Current protocol serialized all work (NEVER push without clean Security report + single handoff field). TutorOS already worked out parallelization pattern (per-task handoffs, isolation checklist, per-engineer cleanup). This v3.9.0 generalizes TutorOS's pattern into the boilerplate, enabling fanout of independent work to accelerate delivery. Tier 2 (parallel per-PR Security review, separate handoff) deferred for later.
+
+## [3.8.0] - 2026-05-18
+
+### Added
+- **`.github/skills/grill-me/`, `grill-with-docs/`, `diagnose/`, `zoom-out/`, `to-prd/`, `to-issues/`, `improve-codebase-architecture/`, `prototype/`** — Eight alignment & design-discipline skills adapted from [mattpocock/skills](https://github.com/mattpocock/skills). Includes companion files (`CONTEXT-FORMAT.md`, `ADR-FORMAT.md`, `LANGUAGE.md`, `INTERFACE-DESIGN.md`, `DEEPENING.md`, `LOGIC.md`, `UI.md`). `to-prd` and `to-issues` were lightly adapted to point at Attacca's GitHub Issues integration (configured by `/init-project`) instead of Matt's `/setup-matt-pocock-skills` bootstrap.
+- **`scripts/sync-skills.mjs`** — Boilerplate-dev helper. Mirrors `.github/skills/` (source of truth) to `.claude/skills/`. Supports `--prune` (also remove stale entries) and `--check` (CI drift detector). `claude-plugin/skills/` is intentionally NOT synced because it ships self-contained variants with the Claude marketplace plugin.
+- **`packs/marketing/skills/`** — New top-level directory holding all 33 marketing skills. NOT auto-loaded by agents.
+- **`cli/bin/index.js`** — `--pack=engineering|marketing|all|none` CLI flag for non-interactive scaffolding. Engineering pack expanded to include the 8 new alignment skills plus `caveman`, `karpathy-guidelines`, `llm-wiki` (which had been live in the template but missing from the CLI's pack list).
+- **`README.md`** — "Alignment & design discipline" skills sub-table, opt-in marketing-pack instructions, `scripts/sync-skills.mjs` usage docs, and an `agentmemory` row in the Companion Tools table (one-line, no MCP wiring — see "Why" below).
+
+### Changed
+- **`packs/marketing/skills/` over `.github/skills/<marketing>/`** — Moved all 33 marketing skills (`ab-test-setup`, `paid-ads`, `pricing-strategy`, etc.) out of `.github/skills/` and `.claude/skills/` into `packs/marketing/skills/`. Agents no longer auto-load them on coding-project work. This is **breaking for anyone who relied on the old paths**, mitigated by: (a) all marketing-skill content is preserved at the new path, (b) `npx create-attacca --pack=marketing` continues to scaffold the same set, (c) git history confirms zero edits to any of these 33 files in 7 months (`2ff9f62`, v2.5.0).
+- **`.claude/skills/`** is now strictly a generated mirror of `.github/skills/`. Manual edits to `.claude/skills/` will be overwritten by the next `sync-skills.mjs` run. Edit `.github/skills/` instead.
+- **`cli/package.json`** version bumped to `3.8.0`.
+- **`.agents/workspace-map.md`** — Updated to reflect new `packs/marketing/skills/`, `scripts/sync-skills.mjs`, and the expanded engineering skill catalog.
+
+### Removed
+- **`.github/workflows/deploy-website2.yml`** — Byte-identical duplicate of `deploy-website.yml`. Both triggered on the same `website/**` push path, causing duplicate GitHub Pages deploys per commit.
+- **`.kiro/`** — Empty orphan directory, zero references anywhere in the repo. Likely a stale IDE artifact.
+
+### Why
+Two external developments converged: the user asked about integrating [rohitg00/agentmemory](https://github.com/rohitg00/agentmemory) and [mattpocock/skills](https://github.com/mattpocock/skills), and on inspection the boilerplate had drifted — 40+ skills shipping by default (most marketing, never edited since v2.5.0), the `.github/skills/` and `.claude/skills/` mirrors silently diverging, a duplicate CI workflow doing the same deploy twice. The fix is three-pronged:
+
+1. **Adopt Matt's engineering skills directly.** They're high-leverage and drop-in (same `SKILL.md` format). `grill-with-docs` in particular gives projects a structured `CONTEXT.md` + `docs/adr/` discipline — file-based, grep-able, no infrastructure — which addresses the same "agent forgets your project's vocabulary" problem that agentmemory tackles with a Node server + native runtime, at roughly 1% the operational cost.
+2. **Stop auto-loading marketing skills on every coding project.** Moving them to `packs/marketing/skills/` keeps the content reachable but out of the default agent context window. Coding projects load 20 skills, not 53.
+3. **Make `.github/skills/` the single source of truth.** A 100-line sync script eliminates the manual-mirror drift that allowed `.claude/skills/` to fall behind by 8 skills the moment Matt's were added. `--check` mode means this can become a CI gate later if drift recurs.
+
+agentmemory was evaluated and documented as a **Companion Tool** (one row in `README.md`) rather than baked in. It is a heavyweight standalone product (server + `iii-engine` native binary or Docker, pinned to a fragile `iii-engine` version, per-developer install) — appropriate for users who need cross-session memory on projects too complex for `CONTEXT.md` + `.agents/state.json`, but the wrong default for a template used to scaffold every new project.
+
 ## [3.7.1] - 2026-05-05
 
 ### Added

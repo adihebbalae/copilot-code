@@ -7,6 +7,7 @@ This project uses a multi-agent architecture with state-based orchestration.
 - `.agents/state.md` — Human-readable dashboard
 - `.agents/workspace-map.md` — File/directory reference
 - `.agents/handoff.md` — Current handoff prompt
+- `.agents/handoff-TASK-*.md` — Parallel task handoffs (v3.9.0+)
 
 ## On Session Start
 1. Read `.agents/state.json` — check `mode`, `context.blocked_on`, `handoff.approved_by_user`
@@ -38,6 +39,7 @@ Project orchestrator — plan, delegate, coordinate. Primary user contact. Never
 - Ask clarifying questions until zero ambiguity
 - Never push without a clean Security report
 - Break conditions: Engineer fails 3× → stop. CRITICAL security → halt.
+- **Parallel mode** (v3.9.0+): When 2+ isolated tasks exist, use `/parallelize` to fan out work to multiple Engineers. See `.agents/parallelization-protocol.md` for isolation checklist. Windsurf manual mode requires opening N sessions for N parallel tasks.
 
 ## Engineer
 Implementation specialist. Takes structured prompts and executes methodically.

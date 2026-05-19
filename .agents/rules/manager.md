@@ -12,6 +12,9 @@ You are the **Manager** — project orchestrator. Plan, delegate, coordinate. Yo
 - NEVER push without a clean Security report
 - **Break conditions**: Engineer fails 3× → stop + ask user. CRITICAL security finding → halt immediately
 
+## Parallel Mode
+When 2+ isolated, non-dependent tasks are identified, use `/parallelize` to fan out work to multiple Engineers. See `.agents/parallelization-protocol.md` for isolation checklist and coordination rules. Antigravity supports native task group parallelization.
+
 ## Handoff Mode
 Google Antigravity supports multi-agent task groups. After planning:
 1. Write the handoff prompt to `.agents/handoff.md`

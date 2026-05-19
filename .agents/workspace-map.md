@@ -40,13 +40,16 @@
     list-modules.prompt.md
     show-graph.prompt.md
     update-boilerplate.prompt.md
+    parallelize.prompt.md           # Parallel task fanout (v3.9.0+)
     git.prompt.md
     hotfix.prompt.md
     meta.prompt.md
     btw.prompt.md
     disable-agent.prompt.md
     enable-agent.prompt.md
-  skills/
+  skills/                          # Source of truth for all auto-loaded skills.
+                                   # Mirror this dir to .claude/skills/ via
+                                   # scripts/sync-skills.mjs.
     code-review/SKILL.md
     security-audit/SKILL.md
     tdd/SKILL.md
@@ -56,17 +59,46 @@
     sbom/SKILL.md
     auto-run/SKILL.md
     incident-response/SKILL.md
-    product-research/SKILL.md
-    + 30 marketing skills (ab-test-setup, ad-creative, ai-seo, etc.)
+    caveman/SKILL.md
+    karpathy-guidelines/SKILL.md
+    llm-wiki/SKILL.md
+    # Alignment & design discipline (adapted from mattpocock/skills, v3.8.0):
+    grill-me/SKILL.md
+    grill-with-docs/SKILL.md       # also: CONTEXT-FORMAT.md, ADR-FORMAT.md
+    diagnose/SKILL.md
+    zoom-out/SKILL.md
+    to-prd/SKILL.md
+    to-issues/SKILL.md
+    improve-codebase-architecture/SKILL.md   # also: LANGUAGE.md, INTERFACE-DESIGN.md, DEEPENING.md
+    prototype/SKILL.md             # also: LOGIC.md, UI.md
   scripts/
     auto-run.ps1                 # PowerShell orchestrator for CLI autonomous execution
     backup.ps1
+
+packs/                             # Opt-in skill packs (NOT auto-loaded by agents)
+  marketing/
+    skills/                        # 33 marketing skills — moved here in v3.8.0
+                                   # so they don't pollute coding-project context
+      ab-test-setup/, ad-creative/, ai-seo/, analytics-tracking/,
+      churn-prevention/, cold-email/, competitor-alternatives/,
+      content-strategy/, copy-editing/, copywriting/, email-sequence/,
+      form-cro/, free-tool-strategy/, launch-strategy/, marketing-ideas/,
+      marketing-psychology/, onboarding-cro/, page-cro/, paid-ads/,
+      paywall-upgrade-cro/, popup-cro/, pricing-strategy/,
+      product-marketing-context/, product-research/, programmatic-seo/,
+      referral-program/, revops/, sales-enablement/, schema-markup/,
+      seo-audit/, signup-flow-cro/, site-architecture/, social-content/
+
+scripts/                           # Boilerplate-dev helper scripts (not shipped to projects)
+  sync-skills.mjs                  # Mirror .github/skills/ -> .claude/skills/ (added v3.8.0)
 
 .agents/
   state.json                     # Machine-readable project state (source of truth)
   state.md                       # Human-readable project dashboard
   workspace-map.md               # THIS FILE
   handoff.md                     # Current inter-agent handoff prompt
+  handoff-TASK-*.md              # Parallel task handoffs (v3.9.0+)
+  parallelization-protocol.md    # Protocol for fanout of 2+ independent tasks (v3.9.0+)
   MODULES.md                     # Module registry (complex projects)
   rules/                         # Antigravity adapter rules
     protocol.md                  # Core protocol (Antigravity)

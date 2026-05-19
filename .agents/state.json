@@ -1,4 +1,5 @@
 {
+  "_schema_notes": "handoff field supports two forms: (1) single object for single-task mode (default), (2) array of objects for parallel mode. See .agents/parallelization-protocol.md.",
   "project": "",
   "description": "",
   "phase": "0 — Not Started",
