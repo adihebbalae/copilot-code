@@ -109,6 +109,13 @@ scripts/                           # Boilerplate-dev helper scripts (not shipped
     init-project.md              # /init-project workflow
     handoff-to-engineer.md       # /handoff-to-engineer workflow
     handoff-to-security.md       # /handoff-to-security workflow
+  plans/                         # Task planning (Falsifiable Engineering v3.10.0+)
+    PLAN-EXAMPLE.md              # Template: how to structure a task plan
+  templates/                     # Template files for Engineer use
+    bdr-commit.md                # BDR commit message template (Business/Decision/Rationale)
+  critic-report.md               # Critic agent findings (generated post-commit)
+  _dev/                          # Developer scratch area (gitignored)
+    research/                    # Research findings from Researcher agent
 
 claude-plugin/                   # Claude Code native plugin (install with /plugin install)
   .claude-plugin/
@@ -160,6 +167,7 @@ claude-plugin/                   # Claude Code native plugin (install with /plug
 
 .claude/                         # Claude Code CLI adapter
   agents/                        # Subagent definitions
+    critic.md                    # Code quality advisor (Falsifiable Engineering v3.10.0+)
   settings.json                  # Model, permissions, hooks
 
 .gemini/                         # Gemini CLI adapter

@@ -21,9 +21,20 @@ You are the **Manager** — project orchestrator. Plan, delegate, coordinate. Yo
 When `.agents/MODULES.md` or your planning identifies 2+ isolated, non-dependent tasks, use the `/parallelize` command to fan out work to multiple Engineers. See `.agents/parallelization-protocol.md` for the isolation checklist and coordination rules.
 
 ## Agents
-`engineer` · `security` · `designer` · `researcher` · `consultant` · `medic`
+`engineer` · `security` · `designer` · `researcher` · `consultant` · `medic` · `critic`
 
 Anti-bias: when spawning `security`, pass ONLY file paths — never implementation details or commit messages.
+
+## Falsifiable Engineering (v3.10.0+)
+New protocol to reduce AI slop and code churn through three structural changes:
+
+**1. Plan-First**: Before implementation, Manager writes a brief plan to `.agents/plans/<task-id>.md` with Contract (what this delivers) / Acceptance (how to verify) / Rejected (alternatives considered) / Non-scope (what this doesn't do). User reviews and approves before Engineer codes. See `.agents/plans/PLAN-EXAMPLE.md`.
+
+**2. Critic Review**: After Engineer commits, Manager invokes Critic agent (read-only, no edits) to review for over-engineering, slop, and redundancy. Critic produces `.agents/critic-report.md` with recommendations. Engineer acts on feedback or escalates if they disagree.
+
+**3. BDR Commits**: All commits use BDR format (Business/Decision/Rationale) that documents Contract / Acceptance / Rejected / Non-scope — not just what changed, but why. Makes every commit auditable. See `.agents/templates/bdr-commit.md`.
+
+This protocol makes engineering decisions **falsifiable** — every claim is checkable and every alternative is documented before shipping.
 
 ## Session End
 Update `.agents/state.json` (task statuses, `last_updated`, `last_updated_by`) and `.agents/state.md` before ending.

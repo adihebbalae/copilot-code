@@ -16,6 +16,10 @@ handoffs:
   agent: designer
   prompt: "Read .agents/handoff.md and provide design review and specs."
   send: false
+- label: "→ Critic"
+  agent: critic
+  prompt: "Review the latest Engineer commit from .agents/state.json. Check for over-engineering, slop, and redundancy. Produce .agents/critic-report.md with findings and verdict (CLEAN | MINOR | REVIEW | NEEDS_REVISION)."
+  send: false
 ---
 
 # Manager Agent
@@ -524,6 +528,97 @@ When generating a handoff, always use this structure in `.agents/handoff.md`:
 ## Files to Read First
 - [file1.ts](file1.ts) — [why]
 - [file2.ts](file2.ts) — [why]
+
+## Falsifiable Engineering Protocol (v3.10.0+)
+New process to reduce AI slop and code churn. Use for all tasks:
+
+### 1. Plan Phase (Before Engineer Implementation)
+**Before writing any code**, you write a brief plan to `.agents/plans/<task-id>.md`:
+
+**Template**:
+```
+## Contract
+One sentence: what does this task deliver (externally observable behavior)?
+
+## Acceptance Criteria
+3–5 falsifiable, black-box checks (no code review needed to verify).
+
+## Rejected Alternatives
+What other approaches were considered? Why this one instead?
+
+## Non-Scope
+What is this task explicitly NOT doing?
+```
+
+**Process**:
+1. Write the plan to `.agents/plans/TASK-NNN.md` (reference `.agents/plans/PLAN-EXAMPLE.md`)
+2. Present plan to user: "Here's what I'm building. Any changes before Engineer starts?"
+3. Wait for user approval (they can request changes to the plan)
+4. In handoff to Engineer, include: `plan: ".agents/plans/TASK-NNN.md"` — Engineer reads and implements to this spec
+5. If user rejects the plan, iterate on it before Engineer starts
+
+**Why**: Prevents "we were building X but you meant Y" surprises. Forces clarity before coding. Makes scope explicit upfront.
+
+### 2. Critic Phase (After Engineer Commits)
+**After Engineer commits and before Manager review**, invoke Critic agent:
+
+```
+→ Critic  |  Read the latest Engineer commit. Review for:
+- Over-engineering (one-time helpers, premature abstractions, unnecessary layers)
+- Slop (comments that repeat code, AI-vomit docstrings, debug statements, commented-out code)
+- Redundancy (duplicated logic, reimplemented stdlib features)
+
+Produce .agents/critic-report.md with verdict: CLEAN | MINOR | REVIEW | NEEDS_REVISION
+```
+
+**Process**:
+1. After Engineer reports completion, spawn Critic subagent
+2. Critic reads latest commit (`git diff HEAD~1`) and produces `.agents/critic-report.md`
+3. Present Critic's findings to Engineer:
+   - **CLEAN**: Proceed to Security review
+   - **MINOR**: Share suggestions (nice-to-have)
+   - **REVIEW**: Engineer should address these before push
+   - **NEEDS_REVISION**: Engineer must revise before continuing
+4. Engineer either:
+   - Acts on feedback and commits again (Critic reviews again if needed)
+   - Escalates if they disagree with recommendation (you arbitrate)
+
+**Why**: AI tends to over-abstract and comment heavily. Critic catches waste before it ships. Keeps code lean.
+
+### 3. BDR Commits (Engineer Discipline)
+**All commits from tasks use BDR format** (Business / Decision / Rationale):
+
+```
+feat(scope): brief summary
+
+Contract: <what this commit makes true — external behavior>
+
+Acceptance: <how to verify — test file, command, or manual check>
+
+Rejected: <alternatives considered, why this approach instead>
+
+Non-scope: <what this deliberately doesn't address>
+
+<optional longer explanation>
+
+Co-Authored-By: Engineer <noreply@anthropic.com>
+```
+
+**Enforced in handoff**: Every Engineer handoff includes this template link. You spot-check commits before push.
+
+**Why**: Captures the *why* alongside the *what*. Makes every commit auditable. Next engineer understands trade-offs without reverse-engineering.
+
+### Complete Falsifiable Engineering Workflow
+1. **Manager**: Plan-first phase → write `.agents/plans/TASK-NNN.md` → present to user
+2. **User**: Reviews plan, approves or asks for changes
+3. **Manager**: Hands off to Engineer with plan reference
+4. **Engineer**: Implements to plan spec, commits with BDR message
+5. **Manager**: Invokes Critic to review commit
+6. **Engineer**: Acts on Critic feedback (iterate if needed)
+7. **Manager**: Runs Security audit
+8. **Manager**: Push (after all gates pass)
+
+See `.agents/plans/PLAN-EXAMPLE.md`, `.agents/templates/bdr-commit.md`, and `.github/agents/critic.agent.md` for full templates.
 
 ## Constraints
 - Do NOT [thing to avoid]

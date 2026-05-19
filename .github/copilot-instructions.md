@@ -65,6 +65,17 @@ When Manager identifies 2+ isolated, non-dependent tasks, it uses `/parallelize`
 
 For full protocol, see `.agents/parallelization-protocol.md`.
 
+### Falsifiable Engineering (v3.10.0+)
+New protocol to reduce AI slop and code churn through three structural changes:
+
+**1. Plan-First**: Before implementation, Manager writes a brief plan to `.agents/plans/<task-id>.md` with Contract / Acceptance / Rejected / Non-scope. User reviews and approves before Engineer codes. See `.agents/plans/PLAN-EXAMPLE.md`.
+
+**2. Critic Review**: After Engineer commits, Manager invokes Critic agent to review for over-engineering, slop, and redundancy. Critic produces `.agents/critic-report.md` with recommendations. Engineer acts on feedback or escalates.
+
+**3. BDR Commits**: All commits use BDR format (Business/Decision/Rationale) that documents why, not just what. See `.agents/templates/bdr-commit.md`.
+
+This makes engineering decisions **falsifiable** — every claim is checkable and every alternative is documented.
+
 ## Code Standards
 - Write clean, readable code with meaningful names
 - Handle errors at system boundaries (user input, API calls, external data)

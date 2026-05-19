@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.10.0] - 2026-05-19
+
+### Added
+- **`.claude/agents/critic.md`** — Critic agent for Claude Code CLI (read-only code reviewer). Reviews Engineer commits for over-engineering, slop, and redundancy. Outputs `.agents/critic-report.md` with verdict: CLEAN | MINOR | REVIEW | NEEDS_REVISION. Model: Sonnet 4.5.
+- **`.github/agents/critic.agent.md`** — Critic agent for Copilot (read-only code reviewer). Full protocol with three scans (over-engineering, slop, redundancy) and report format. Never edits code; produces recommendations only.
+- **`.agents/plans/PLAN-EXAMPLE.md`** — Template showing the plan-first protocol. Plans document Contract (what task delivers) / Acceptance Criteria (falsifiable checks) / Rejected Alternatives / Non-Scope. User reviews plan before Engineer implementation.
+- **`.agents/templates/bdr-commit.md`** — BDR commit message template (Business/Decision/Rationale). Documents why each commit was made, not just what changed. Captures Contract / Acceptance / Rejected / Non-scope to make commits auditable and prevent re-arguing design decisions.
+- **`scripts/validate-falsifiable-eng.mjs`** — Validation script that checks: Critic agents exist, plan template exists, BDR template exists, Manager and Engineer protocols reference the new feature, workspace-map is updated. Exit 0 if all checks pass, 1 otherwise. CI-safe.
+
+### Changed
+- **`CLAUDE.md`** — Added "Falsifiable Engineering (v3.10.0+)" section listing three components: plan-first, critic review, and BDR commits. Added `critic` to Agents list.
+- **`.github/copilot-instructions.md`** — Added "Falsifiable Engineering (v3.10.0+)" section under Parallel Mode. Explains plan-first phase, Critic review phase, and BDR commits.
+- **`.github/agents/manager.agent.md`** — Added new section "Falsifiable Engineering Protocol (v3.10.0+)" with full workflow: (1) Manager writes plan to `.agents/plans/TASK-NNN.md`, (2) User reviews and approves plan, (3) Engineer implements to plan spec, (4) Manager invokes Critic after commit, (5) Engineer acts on feedback, (6) Security audit, (7) Push. Also added Critic to handoffs array in frontmatter.
+- **`.github/agents/engineer.agent.md`** — Updated "Implementation Process" step 1 to reference `.agents/plans/TASK-NNN.md` from handoff. Step 9 now requires BDR-formatted commits with Contract/Acceptance/Rejected/Non-scope. Added new section "Critic Review (Post-Commit)" explaining what happens after commit and how to respond to Critic feedback.
+- **`.agents/workspace-map.md`** — Added `plans/` directory, `templates/` directory with `bdr-commit.md`, `critic-report.md`, and `_dev/research/` reference. Added Critic agent to `.claude/agents/` and `.github/agents/` sections.
+
+### Why
+This release ships the **Falsifiable Engineering protocol** — a config-only feature that reduces AI slop and code churn by making engineering decisions auditable and preventing scope creep.
+
+Three structural changes work together:
+
+1. **Plan-First** — Forces clarity before coding. Captures what the task delivers (Contract), how to verify it (Acceptance), why this approach (Rejected), and what's deliberately out-of-scope (Non-Scope). User approves before Engineer writes code. Eliminates "we were building X but you meant Y" surprises.
+
+2. **Critic Review** — Reads every commit post-implementation and flags waste: one-time helpers (over-engineering), comments that repeat code (slop), and duplicated logic (redundancy). Read-only role; produces recommendations. Engineer decides what to act on. Keeps code lean.
+
+3. **BDR Commits** — Every commit documents Business/Decision/Rationale. Captures the *why* alongside the *what*. Makes commits auditable. Prevents the next engineer from re-proposing rejected alternatives. Turns `git log` into institutional knowledge instead of opaque history.
+
+**Why now**: AI tends to over-engineer (adding layers "for future flexibility"), over-comment (including obvious docstrings), and re-implement instead of reach for stdlib. The protocol provides three guardrails. It's not about perfection — it's about catching preventable waste before it ships. All three components are **config-only** (no new tools, no new infrastructure) — the boilerplate just documents and enforces best practices.
+
 ## [3.9.0] - 2026-05-19
 
 ### Added
